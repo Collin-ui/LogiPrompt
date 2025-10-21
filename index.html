@@ -6,58 +6,33 @@
 <title>LogiPrompt v2.3</title>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 <style>
-  /* --- Design im Stil der alten Version (zentrierte Login-Box, weiß/hellblau) --- */
   :root{
-    --blue:#0077cc;
-    --blue-dark:#005fa3;
-    --bg:#f5faff;
-    --card:#ffffff;
-    --muted:#6b7280;
-    --green:#00cc44;
+    --blue:#0077cc; --blue-dark:#005fa3; --bg:#f5faff; --card:#fff; --muted:#6b7280; --green:#00cc44; --danger:#e53935;
   }
   *{box-sizing:border-box}
   body{margin:0;font-family:Roboto,Arial,sans-serif;background:var(--bg);color:#111}
-  header{
-    background:var(--blue);
-    color:#fff;
-    padding:14px 20px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    box-shadow:0 2px 6px rgba(0,0,0,0.08);
-  }
+  header{background:var(--blue);color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.08)}
   header .title{font-weight:700}
   header .menu-toggle{font-size:20px;cursor:pointer;user-select:none}
 
-  /* layout */
-  #app{display:flex;min-height:calc(100vh - 56px);}
-  nav{
-    width:260px;
-    background:#eaf6ff;
-    padding:18px;
-    box-shadow:2px 0 6px rgba(0,0,0,0.05);
-    transition:width .25s;
-  }
+  #app{display:flex;min-height:calc(100vh - 56px)}
+  nav{width:260px;background:#eaf6ff;padding:18px;box-shadow:2px 0 6px rgba(0,0,0,0.05);transition:width .25s;display:flex;flex-direction:column;justify-content:space-between}
   nav.closed{width:64px}
+  nav .top{display:block}
   nav .profile-thumb{width:56px;height:56px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 12px}
   nav ul{list-style:none;padding:0;margin:0}
   nav li{background:#d8edff;padding:10px;border-radius:8px;margin-bottom:8px;text-align:center;cursor:pointer;transition:background .15s}
   nav.closed li{padding:10px 6px}
   nav li:hover{background:#bfe3ff}
 
+  nav .logout{background:var(--danger);color:#fff;padding:10px;border-radius:8px;border:none;cursor:pointer;width:100%}
+  nav .logout:hover{background:#c6372d}
+
   main{flex:1;padding:28px}
 
-  /* centered login card (old style) */
   .card{max-width:420px;margin:5% auto;background:var(--card);padding:26px;border-radius:12px;box-shadow:0 8px 20px rgba(10,30,60,0.06)}
   .card h2{text-align:center;margin:0 0 12px;font-size:22px}
-  input,select,button{
-    width:100%;
-    padding:10px 12px;
-    margin:8px 0;
-    border-radius:8px;
-    border:1px solid #d1d5db;
-    font-size:15px;
-  }
+  input,select,button{width:100%;padding:10px 12px;margin:8px 0;border-radius:8px;border:1px solid #d1d5db;font-size:15px}
   label.inline{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
   button.primary{background:var(--blue);color:#fff;border:none;cursor:pointer;border-radius:8px}
   button.ghost{background:transparent;border:1px solid #cbd5e1;color:#0b1220;cursor:pointer}
@@ -65,26 +40,22 @@
   .row{display:flex;gap:10px}
   .row > *{flex:1}
 
-  /* prompt page pieces */
   .form-field{margin-bottom:10px}
   .tooltip{display:inline-block;position:relative;color:var(--blue);font-weight:700;margin-right:8px;cursor:help}
   .tooltip .tt{visibility:hidden;width:220px;background:var(--blue);color:#fff;padding:8px;border-radius:6px;position:absolute;bottom:130%;left:50%;transform:translateX(-50%);opacity:0;transition:opacity .2s}
   .tooltip:hover .tt{visibility:visible;opacity:1}
 
   #promptOutput{background:#fbfeff;border:1px solid #e6f7ff;padding:12px;border-radius:8px;min-height:78px;white-space:pre-wrap;margin-top:12px}
-  #truckAnimation{width:64px;height:40px;display:block;margin:12px 0;transition:transform 1.8s cubic-bezier(.2,.9,.2,1)}
+  #truckAnimation{width:64px;height:40px;display:block;margin:12px 0;transition:transform 1.0s cubic-bezier(.2,.9,.2,1)}
   .status{margin-top:10px;color:var(--blue);font-weight:700}
 
-  /* rating boxes */
   #rating{display:flex;gap:8px;margin-top:12px}
   .box{width:36px;height:36px;border-radius:6px;background:#eee;border:1px solid #d1d5db}
   .box.active{background:var(--green);border-color:rgba(0,0,0,0.06)}
 
-  /* favorites list */
   .fav-item{border:1px solid #e6eef8;padding:10px;border-radius:8px;margin-bottom:8px;background:#fff}
   .fav-meta{font-size:12px;color:var(--muted);margin-bottom:6px}
 
-  /* responsive */
   @media (max-width:900px){
     nav{display:none}
     .card{margin:7% 12px}
@@ -99,18 +70,24 @@
   </header>
 
   <div id="app">
-    <!-- Navigation (hidden until login) -->
+    <!-- Navigation (initially hidden until login) -->
     <nav id="sideMenu" style="display:none" class="closed" aria-hidden="true">
-      <img id="profilePicMenu" class="profile-thumb" src="https://via.placeholder.com/56?text=LP" alt="Profilbild">
-      <ul>
-        <li id="navProfile">Profil</li>
-        <li id="navPrompt">Prompt Erstellung</li>
-        <li id="navFavs">Favoriten</li>
-      </ul>
+      <div class="top">
+        <img id="profilePicMenu" class="profile-thumb" src="https://via.placeholder.com/56?text=LP" alt="Profilbild">
+        <ul>
+          <li id="navProfile">Profil</li>
+          <li id="navPrompt">Prompt Erstellung</li>
+          <li id="navFavs">Favoriten</li>
+        </ul>
+      </div>
+
+      <div>
+        <button id="btnLogout" class="logout">Abmelden</button>
+      </div>
     </nav>
 
     <main id="mainContent">
-      <!-- LOGIN (zentrierte card wie alte Version) -->
+      <!-- LOGIN -->
       <div id="loginPage" class="card">
         <h2>Anmeldung / Registrierung</h2>
 
@@ -130,7 +107,7 @@
         <p class="small" style="margin-top:10px">Hinweis: Mit <strong>Weiter</strong> gelangst du zur Prompt-Erstellung, deine Daten werden aber nicht gespeichert. Mit <strong>Speichern &amp; Fortsetzen</strong> werden die Account-Daten im Browser gesichert.</p>
       </div>
 
-      <!-- PROFILE PAGE (hidden initially) -->
+      <!-- PROFILE -->
       <div id="profilePage" class="card hidden" style="max-width:760px;margin-left:auto;margin-right:auto">
         <h2>Profil</h2>
         <div class="row">
@@ -153,7 +130,7 @@
         <div id="profileStatus" class="status" aria-live="polite" style="display:none"></div>
       </div>
 
-      <!-- PROMPT PAGE -->
+      <!-- PROMPT -->
       <div id="promptPage" class="card hidden" style="max-width:880px;margin-left:auto;margin-right:auto">
         <h2>Prompt Erstellung</h2>
 
@@ -215,10 +192,8 @@
           </div>
         </div>
 
-        <!-- LKW Animation -->
         <img id="truckAnimation" src="https://cdn-icons-png.flaticon.com/512/616/616408.png" alt="LKW">
 
-        <!-- Prompt Output (sichtbar nach Generierung) -->
         <div id="promptOutput" aria-live="polite"></div>
 
         <div style="display:flex;gap:10px;margin-top:10px">
@@ -237,7 +212,7 @@
         </div>
       </div>
 
-      <!-- FAVORITES PAGE -->
+      <!-- FAVORITES -->
       <div id="favoritesPage" class="card hidden" style="max-width:880px;margin-left:auto;margin-right:auto">
         <h2>Favoriten</h2>
         <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
@@ -257,17 +232,15 @@
   </div>
 
 <script>
-/* ---------- State & helpers ---------- */
-let currentUser = null; // session-only if not saved
+/* ---------- Keys & helpers ---------- */
 const KEY_USER = 'lp_currentUser_v2';
 const KEY_FAVS = 'lp_favorites_v2';
 const KEY_STAY = 'lp_stay_v2';
-
 const el = id => document.getElementById(id);
-const show = (id)=> el(id).classList.remove('hidden');
-const hide = (id)=> el(id).classList.add('hidden');
+const show = id => el(id).classList.remove('hidden');
+const hide = id => el(id).classList.add('hidden');
 
-function showPopup(msg, ms=1800){
+function showPopup(msg, ms=1600){
   const p = document.createElement('div');
   p.textContent = msg;
   Object.assign(p.style, {
@@ -278,35 +251,39 @@ function showPopup(msg, ms=1800){
   setTimeout(()=> p.remove(), ms);
 }
 
-/* ---------- Navigation & Menu ---------- */
+/* ---------- Menu toggle ---------- */
 const sideMenu = el('sideMenu');
 el('menuToggle').addEventListener('click', ()=>{
-  if(window.innerWidth < 900){ // small screens: show/hide nav completely
+  if(window.innerWidth < 900){
     sideMenu.style.display = sideMenu.style.display === 'block' ? 'none' : 'block';
   } else {
     sideMenu.classList.toggle('closed');
   }
 });
 
-// nav click handlers
+/* ---------- Nav handlers ---------- */
 el('navProfile').addEventListener('click', ()=> showPage('profile'));
 el('navPrompt').addEventListener('click', ()=> showPage('prompt'));
 el('navFavs').addEventListener('click', ()=> showPage('favorites'));
 
-/* ---------- Login behavior ---------- */
-// Continue (no save)
+/* ---------- Login actions ---------- */
+// Continue (no persist)
 el('btnContinue').addEventListener('click', ()=>{
-  // Build a transient currentUser from entered fields, but don't save to localStorage
   currentUser = {
     name: el('name').value.trim(),
     role: el('role').value.trim(),
     company: el('company').value.trim(),
     email: el('email').value.trim(),
-    password: el('password').value // keep in memory for session only
+    password: el('password').value // session only
   };
-  // show menu (not saved)
+  // show menu, but do not persist
   sideMenu.style.display = 'block';
   el('profilePicMenu').src = currentUser.profilePic || 'https://via.placeholder.com/56?text=LP';
+  // populate profile fields for convenience
+  el('profileName').value = currentUser.name || '';
+  el('profileRole').value = currentUser.role || '';
+  el('profileCompany').value = currentUser.company || '';
+  el('profileEmail').value = currentUser.email || '';
   showPage('prompt');
 });
 
@@ -327,40 +304,40 @@ el('btnSaveContinue').addEventListener('click', ()=>{
   showPopup('Account gespeichert!');
   sideMenu.style.display = 'block';
   el('profilePicMenu').src = currentUser.profilePic || 'https://via.placeholder.com/56?text=LP';
+  // populate profile page
+  el('profileName').value = currentUser.name;
+  el('profileRole').value = currentUser.role;
+  el('profileCompany').value = currentUser.company;
+  el('profileEmail').value = currentUser.email;
   showPage('prompt');
 });
 
 /* ---------- Auto-login on load ---------- */
+let currentUser = null;
 window.addEventListener('load', ()=>{
   const saved = localStorage.getItem(KEY_USER);
   const stay = localStorage.getItem(KEY_STAY);
   if(saved && stay){
     currentUser = JSON.parse(saved);
-    // populate profile inputs
     el('profileName').value = currentUser.name || '';
     el('profileRole').value = currentUser.role || '';
     el('profileCompany').value = currentUser.company || '';
     el('profileEmail').value = currentUser.email || '';
-    if(currentUser.profilePic) {
-      el('profilePreview').src = currentUser.profilePic;
-      el('profilePicMenu').src = currentUser.profilePic;
-    }
+    if(currentUser.profilePic) { el('profilePreview').src = currentUser.profilePic; el('profilePicMenu').src = currentUser.profilePic; }
     sideMenu.style.display = 'block';
     showPage('prompt');
   } else {
-    // show login card (centered) - keep initial view
+    // show login
     showPage('login');
   }
 });
 
 /* ---------- Page switching ---------- */
 function showPage(name){
-  // hide all pages
-  ['login','profile','prompt','favorites'].forEach(p=>{
-    const id = p + 'Page';
-    if(el(id)) el(id).classList.add('hidden');
+  ['loginPage','profilePage','promptPage','favoritesPage'].forEach(id => {
+    const eln = document.getElementById(id);
+    if(eln) eln.classList.add('hidden');
   });
-  // special: loginPage has id 'loginPage', others match names used above
   if(name === 'login') el('loginPage').classList.remove('hidden');
   else if(name === 'profile') el('profilePage').classList.remove('hidden');
   else if(name === 'prompt') el('promptPage').classList.remove('hidden');
@@ -370,14 +347,12 @@ function showPage(name){
   }
 }
 
-/* ---------- Profile (image preview + save) ---------- */
+/* ---------- Profile image & save ---------- */
 el('profilePic').addEventListener('change', (ev)=>{
   const f = ev.target.files[0];
   if(!f) return;
   const r = new FileReader();
-  r.onload = e => {
-    el('profilePreview').src = e.target.result;
-  };
+  r.onload = e => el('profilePreview').src = e.target.result;
   r.readAsDataURL(f);
 });
 
@@ -386,15 +361,7 @@ el('btnRemovePic').addEventListener('click', ()=>{
   el('profilePic').value = '';
 });
 
-el('btnProfileCancel').addEventListener('click', ()=>{
-  // revert preview to saved if any
-  const saved = localStorage.getItem(KEY_USER);
-  if(saved){
-    const u = JSON.parse(saved);
-    el('profilePreview').src = u.profilePic || 'https://via.placeholder.com/120?text=LP';
-  }
-  showPage('prompt');
-});
+el('btnProfileCancel').addEventListener('click', ()=> showPage('prompt'));
 
 el('btnSaveProfile').addEventListener('click', ()=>{
   if(!currentUser) currentUser = {};
@@ -408,25 +375,21 @@ el('btnSaveProfile').addEventListener('click', ()=>{
     const r = new FileReader();
     r.onload = e => {
       currentUser.profilePic = e.target.result;
-      // persist if user previously saved account
       const saved = localStorage.getItem(KEY_USER);
       if(saved){
         const u = JSON.parse(saved);
         const merged = Object.assign(u, currentUser);
         localStorage.setItem(KEY_USER, JSON.stringify(merged));
       } else {
-        // store minimal saved user so profile persists when saving here
         localStorage.setItem(KEY_USER, JSON.stringify(currentUser));
       }
       el('profilePicMenu').src = currentUser.profilePic;
       showPopup('Profil gespeichert!');
-      el('profileStatus').style.display = 'block';
-      el('profileStatus').textContent = 'Profil gespeichert!';
-      setTimeout(()=> el('profileStatus').style.display='none',1600);
+      el('profileStatus').style.display = 'block'; el('profileStatus').textContent = 'Profil gespeichert!';
+      setTimeout(()=> el('profileStatus').style.display='none',1400);
     };
     r.readAsDataURL(file);
   } else {
-    // no new file
     const saved = localStorage.getItem(KEY_USER);
     if(saved){
       const u = JSON.parse(saved);
@@ -438,35 +401,22 @@ el('btnSaveProfile').addEventListener('click', ()=>{
     }
     el('profilePicMenu').src = currentUser.profilePic || 'https://via.placeholder.com/56?text=LP';
     showPopup('Profil gespeichert!');
-    el('profileStatus').style.display = 'block';
-    el('profileStatus').textContent = 'Profil gespeichert!';
-    setTimeout(()=> el('profileStatus').style.display='none',1600);
+    el('profileStatus').style.display = 'block'; el('profileStatus').textContent = 'Profil gespeichert!';
+    setTimeout(()=> el('profileStatus').style.display='none',1400);
   }
 });
 
-/* ---------- Prompt generation ---------- */
-// The "Grundtext" used exactly (inserted values)
-// (you told me to use the exact old text — this is that text filled with inputs)
-function buildPromptText(user, fields){
-  // Ensure we don't crash if currentUser null
-  const u = user || {name:'',role:'',company:''};
-  return `Von: ${u.name || ''}, ${u.role || ''}, ${u.company || ''}
-An: ${fields.recipientName || ''} (${fields.recipientRole || ''})
-Tonfall: ${fields.tone || ''}
-Format: ${fields.textFormat || ''}
-Sprache: ${fields.language || ''}
-Thema: ${fields.keyword || ''}
-
-Bitte verfasse einen professionellen Text basierend auf diesen Angaben.`;
+/* ---------- Prompt build (exact template as provided) ---------- */
+function buildPrompt(user, f){
+  const u = user || {name:'', role:'', company:''};
+  return `Erstelle eine professionelle Nachricht zum Thema ${f.keyword || ''} für ${f.recipientName || ''} in der Rolle ${f.recipientRole || ''} im Ton ${f.tone || ''} im Format ${f.textFormat || ''} auf ${f.language || ''}. Absender ist ${u.name || ''}, ${u.role || ''} bei ${u.company || ''}.`;
 }
 
+/* Generate */
 el('btnGenerate').addEventListener('click', ()=>{
   const keyword = el('keyword').value.trim();
-  if(!keyword){
-    alert('Thema ist Pflichtfeld!');
-    return;
-  }
-  const fields = {
+  if(!keyword){ alert('Thema ist Pflichtfeld!'); return; }
+  const f = {
     keyword,
     recipientRole: el('recipientRole').value,
     recipientName: el('recipientName').value.trim(),
@@ -475,22 +425,20 @@ el('btnGenerate').addEventListener('click', ()=>{
     language: el('language').value
   };
 
-  // truck animation (move right then reset)
+  // truck animation
   const truck = el('truckAnimation');
   truck.style.transform = 'translateX(420px)';
   setTimeout(()=> truck.style.transform = 'translateX(0)', 900);
 
-  // build prompt using exact base text
-  const prompt = buildPromptText(currentUser, fields);
+  // build prompt (exact template)
+  const prompt = buildPrompt(currentUser, f);
   el('promptOutput').textContent = prompt;
-  el('promptStatus').style.display = 'block';
-  el('promptStatus').textContent = 'Prompt generiert!';
+  el('promptStatus').style.display = 'block'; el('promptStatus').textContent = 'Prompt generiert!';
   setTimeout(()=> el('promptStatus').style.display='none',1400);
-
   showPopup('Prompt generiert!');
 
-  // rating boxes: count number of non-empty fields among the 6 important fields
-  const important = [fields.keyword, fields.recipientRole, fields.recipientName, fields.tone, fields.textFormat, fields.language];
+  // rating (count filled important fields)
+  const important = [f.keyword, f.recipientRole, f.recipientName, f.tone, f.textFormat, f.language];
   const filled = important.filter(x => x && x.toString().trim().length>0).length;
   for(let i=1;i<=5;i++){
     const b = el('box'+i);
@@ -498,32 +446,26 @@ el('btnGenerate').addEventListener('click', ()=>{
   }
 });
 
-/* ---------- reset ---------- */
+/* Reset */
 el('btnReset').addEventListener('click', ()=>{
   ['keyword','recipientRole','recipientName','tone','textFormat','language'].forEach(id=>{
-    const eln = document.getElementById(id);
-    if(!eln) return;
-    if(eln.tagName === 'SELECT') eln.selectedIndex = 0;
-    else eln.value = '';
+    const e = el(id);
+    if(!e) return;
+    if(e.tagName === 'SELECT') e.selectedIndex = 0; else e.value = '';
   });
   el('promptOutput').textContent = '';
   el('promptStatus').style.display = 'none';
   for(let i=1;i<=5;i++) el('box'+i).classList.remove('active');
 });
 
-/* ---------- copy prompt ---------- */
+/* Copy */
 el('btnCopy').addEventListener('click', async ()=>{
   const text = el('promptOutput').textContent;
   if(!text) return showPopup('Kein Prompt vorhanden');
-  try{
-    await navigator.clipboard.writeText(text);
-    showPopup('Prompt kopiert!');
-  }catch(e){
-    showPopup('Kopieren fehlgeschlagen');
-  }
+  try{ await navigator.clipboard.writeText(text); showPopup('Prompt kopiert!'); } catch(e){ showPopup('Kopieren fehlgeschlagen'); }
 });
 
-/* ---------- favorites (save / render / sort / filter / delete) ---------- */
+/* ---------- Favorites ---------- */
 el('btnSaveFav').addEventListener('click', ()=>{
   const prompt = el('promptOutput').textContent;
   if(!prompt) return showPopup('Kein Prompt zum Speichern');
@@ -540,22 +482,12 @@ function renderFavorites(){
   const sort = el('sortFavorites').value;
   if(sort === 'newest') favs = favs.slice().sort((a,b)=>b.id - a.id);
   else favs = favs.slice().sort((a,b)=>a.id - b.id);
-
-  // filter
   const filter = (el('filterFavs').value || '').toLowerCase();
-  if(filter){
-    favs = favs.filter(f => (f.prompt + (f.title||'')).toLowerCase().includes(filter));
-  }
-
-  const container = el('favoritesList');
-  container.innerHTML = '';
-  if(favs.length === 0){
-    container.innerHTML = '<div class="small" style="color:var(--muted)">Keine Favoriten gefunden.</div>';
-    return;
-  }
+  if(filter) favs = favs.filter(f => (f.prompt + (f.title||'')).toLowerCase().includes(filter));
+  const container = el('favoritesList'); container.innerHTML = '';
+  if(favs.length === 0) { container.innerHTML = '<div class="small" style="color:var(--muted)">Keine Favoriten gefunden.</div>'; return; }
   favs.forEach(f=>{
-    const d = document.createElement('div');
-    d.className = 'fav-item';
+    const d = document.createElement('div'); d.className = 'fav-item';
     d.innerHTML = `<div class="fav-meta">${new Date(f.date).toLocaleString()}</div>
                    <pre style="white-space:pre-wrap;margin:0">${escapeHtml(f.prompt)}</pre>
                    <div style="margin-top:8px;display:flex;gap:8px">
@@ -567,12 +499,9 @@ function renderFavorites(){
 }
 el('sortFavorites').addEventListener('change', renderFavorites);
 el('filterFavs').addEventListener('input', renderFavorites);
-
 el('btnClearFavs').addEventListener('click', ()=>{
   if(!confirm('Alle Favoriten löschen?')) return;
-  localStorage.removeItem(KEY_FAVS);
-  renderFavorites();
-  showPopup('Favoriten gelöscht');
+  localStorage.removeItem(KEY_FAVS); renderFavorites(); showPopup('Favoriten gelöscht');
 });
 
 window.useFavorite = function(id){
@@ -582,24 +511,38 @@ window.useFavorite = function(id){
   el('promptOutput').textContent = f.prompt;
   showPopup('Favorit geladen');
 };
-
 window.deleteFavorite = function(id){
   let favs = JSON.parse(localStorage.getItem(KEY_FAVS) || '[]');
   favs = favs.filter(x => x.id !== id);
   localStorage.setItem(KEY_FAVS, JSON.stringify(favs));
-  renderFavorites();
-  showPopup('Favorit entfernt');
+  renderFavorites(); showPopup('Favorit entfernt');
 };
+function escapeHtml(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
-/* ---------- small util ---------- */
-function escapeHtml(s){
-  return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-}
+/* ---------- Logout (confirm + clear) ---------- */
+el('btnLogout').addEventListener('click', ()=>{
+  const ok = confirm('Willst du dich wirklich abmelden? Alle gespeicherten Daten (Account & Favoriten) werden gelöscht.');
+  if(!ok) return;
+  // clear saved keys
+  localStorage.removeItem(KEY_USER);
+  localStorage.removeItem(KEY_FAVS);
+  localStorage.removeItem(KEY_STAY);
+  // clear session
+  currentUser = null;
+  // hide menu & show login
+  sideMenu.style.display = 'none';
+  // clear login inputs
+  ['name','role','company','email','password'].forEach(id => { if(el(id)) el(id).value = ''; });
+  // clear profile preview
+  el('profilePreview').src = 'https://via.placeholder.com/120?text=LP';
+  el('profilePicMenu').src = 'https://via.placeholder.com/56?text=LP';
+  showPopup('Abgemeldet: lokale Daten gelöscht');
+  showPage('login');
+});
 
-/* ---------- Accessibility / tiny fixes ---------- */
+/* ---------- small accessibility ---------- */
 document.addEventListener('keydown', (e)=>{
   if(e.key === 'Escape'){
-    // close menu on small screens
     if(window.innerWidth < 900 && sideMenu.style.display === 'block') sideMenu.style.display = 'none';
   }
 });
