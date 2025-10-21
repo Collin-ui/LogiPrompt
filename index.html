@@ -1,6 +1,395 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>LogiPrompt v2.3</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚚</text></svg>">
+<style>
+:root{--blue:#0077cc;--bg:#f5faff;--card:#fff;--muted:#6b7280;--green:#00cc44;--danger:#e53935;}
+*{box-sizing:border-box;}
+body{margin:0;font-family:Roboto,Arial,sans-serif;background:var(--bg);color:#111;}
+header{background:var(--blue);color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.08);}
+header .title{font-weight:700;}
+header .menu-toggle{font-size:20px;cursor:pointer;user-select:none;}
+#app{display:flex;min-height:calc(100vh - 56px);}
+nav{width:260px;background:#eaf6ff;padding:18px;box-shadow:2px 0 6px rgba(0,0,0,0.05);transition:width .25s;display:flex;flex-direction:column;justify-content:space-between;}
+nav.closed{width:64px;}
+nav .profile-thumb{width:56px;height:56px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 12px;}
+nav ul{list-style:none;padding:0;margin:0;}
+nav li{background:#d8edff;padding:10px;border-radius:8px;margin-bottom:8px;text-align:center;cursor:pointer;transition:background .15s;}
+nav.closed li{padding:10px 6px;}
+nav li:hover{background:#bfe3ff;}
+nav .logout{background:var(--danger);color:#fff;padding:10px;border-radius:8px;border:none;cursor:pointer;width:100%;}
+nav .logout:hover{background:#c6372d;}
+main{flex:1;padding:28px;}
+.card{max-width:420px;margin:5% auto;background:var(--card);padding:26px;border-radius:12px;box-shadow:0 8px 20px rgba(10,30,60,0.06);}
+.card h2{text-align:center;margin:0 0 12px;font-size:22px;}
+input,select,button{width:100%;padding:10px 12px;margin:8px 0;border-radius:8px;border:1px solid #d1d5db;font-size:15px;}
+label.inline{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted);}
+.tooltip{display:inline-block;position:relative;color:var(--blue);font-weight:700;margin-right:8px;cursor:help;}
+.tooltip .tt{visibility:hidden;width:220px;background:var(--blue);color:#fff;padding:8px;border-radius:6px;position:absolute;bottom:130%;left:50%;transform:translateX(-50%);opacity:0;transition:opacity .2s;}
+.tooltip:hover .tt{visibility:visible;opacity:1;}
+#promptOutput{background:#fbfeff;border:1px solid #e6f7ff;padding:12px;border-radius:8px;min-height:78px;white-space:pre-wrap;margin-top:12px;}
+#truckAnimation{width:64px;height:40px;display:block;margin:12px 0;transition:transform 1s cubic-bezier(.2,.9,.2,1);}
+.status{margin-top:10px;color:var(--blue);font-weight:700;}
+#rating{display:flex;gap:8px;margin-top:12px;}
+.box{width:36px;height:36px;border-radius:6px;background:#eee;border:1px solid #d1d5db;}
+.box.active{background:var(--green);border-color:rgba(0,0,0,0.06);}
+.fav-item{border:1px solid #e6eef8;padding:10px;border-radius:8px;margin-bottom:8px;background:#fff;}
+.fav-meta{font-size:12px;color:var(--muted);margin-bottom:6px;}
+.hidden{display:none;}
+.row{display:flex;gap:10px;}
+.row> *{flex:1;}
+.form-field{margin-bottom:10px;}
+button.primary{background:var(--blue);color:#fff;border:none;cursor:pointer;border-radius:8px;}
+button.ghost{background:transparent;border:1px solid #cbd5e1;color:#0b1220;cursor:pointer;}
+@media (max-width:900px){nav{display:none}.card{margin:7% 12px}header{padding:12px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="title">LogiPrompt v2.3</div>
+  <div class="menu-toggle" id="menuToggle">☰</div>
+</header>
+<div id="app">
+<nav id="sideMenu" style="display:none" class="closed">
+  <div class="top">
+    <img id="profilePicMenu" class="profile-thumb" src="https://via.placeholder.com/56?text=LP" alt="Profilbild">
+    <ul>
+      <li id="navProfile">Profil</li>
+      <li id="navPrompt">Prompt Erstellung</li>
+      <li id="navFavs">Favoriten</li>
+    </ul>
+  </div>
+  <div>
+    <button id="btnLogout" class="logout">Abmelden</button>
+  </div>
+</nav>
+<main id="mainContent">
+
+<!-- LOGIN -->
+<div id="loginPage" class="card">
+  <h2>Anmeldung / Registrierung</h2>
+  <input id="name" type="text" placeholder="Name" autocomplete="name">
+  <input id="role" type="text" placeholder="Rolle in der Firma">
+  <input id="company" type="text" placeholder="Firmenname">
+  <input id="email" type="email" placeholder="E-Mail">
+  <input id="password" type="password" placeholder="Passwort">
+  <label class="inline"><input id="stayLoggedIn" type="checkbox"> Angemeldet bleiben</label>
+  <div class="row" style="margin-top:12px">
+    <button class="ghost" id="btnContinue">Weiter</button>
+    <button class="primary" id="btnSaveContinue">Speichern & Fortsetzen</button>
+  </div>
+  <p class="small" style="margin-top:10px">Hinweis: Mit <strong>Weiter</strong> gelangst du zur Prompt-Erstellung, deine Daten werden aber nicht gespeichert. Mit <strong>Speichern &amp; Fortsetzen</strong> werden die Account-Daten im Browser gesichert.</p>
+</div>
+
+<!-- PROFILE -->
+<div id="profilePage" class="card hidden" style="max-width:760px;margin-left:auto;margin-right:auto">
+  <h2>Profil</h2>
+  <div class="row">
+    <div style="flex:1">
+      <input id="profileName" type="text" placeholder="Name">
+      <input id="profileRole" type="text" placeholder="Rolle in der Firma">
+      <input id="profileCompany" type="text" placeholder="Firmenname">
+      <input id="profileEmail" type="email" placeholder="E-Mail">
+    </div>
+    <div style="width:160px;text-align:center">
+      <img id="profilePreview" src="https://via.placeholder.com/120?text=LP" alt="Profil" style="width:120px;height:120px;border-radius:12px;object-fit:cover;margin-bottom:6px">
+      <input id="profilePic" type="file" accept="image/*">
+      <button class="ghost" id="btnRemovePic">Bild entfernen</button>
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;justify-content:flex-end">
+    <button class="ghost" id="btnProfileCancel">Abbrechen</button>
+    <button class="primary" id="btnSaveProfile">Profil speichern</button>
+  </div>
+  <div id="profileStatus" class="status" aria-live="polite" style="display:none"></div>
+</div>
+
+<!-- PROMPT -->
+<div id="promptPage" class="card hidden" style="max-width:880px;margin-left:auto;margin-right:auto">
+  <h2>Prompt Erstellung</h2>
+  <div class="form-field">
+    <label class="tooltip">i<span class="tt">Gib das Thema des Prompts ein (z.B. Ermahnung)</span></label>
+    <input id="keyword" type="text" placeholder="Thema / Schlüsselwort" />
+  </div>
+  <div class="form-field">
+    <label class="tooltip">i<span class="tt">Zusätzliche Informationen (z.B. Hintergrund, Kontext)</span></label>
+    <input id="additionalInfo" type="text" placeholder="Zusätzliche Informationen"/>
+  </div>
+  <div class="row">
+    <div>
+      <label class="tooltip">i<span class="tt">Rolle des Adressaten</span></label>
+      <select id="recipientRole">
+        <option value="">-- auswählen --</option>
+        <option>Fahrerpersonal</option>
+        <option>Logistikleitung</option>
+        <option>Disponent</option>
+      </select>
+    </div>
+    <div>
+      <label class="tooltip">i<span class="tt">Name des Empfängers</span></label>
+      <input id="recipientName" type="text" placeholder="Empfänger Name">
+    </div>
+  </div>
+  <div class="row">
+    <div>
+      <label class="tooltip">i<span class="tt">Tonfall</span></label>
+      <select id="tone">
+        <option value="">-- auswählen --</option>
+        <option>ernst</option>
+        <option>lösungsorientiert</option>
+        <option>freundlich</option>
+      </select>
+    </div>
+    <div>
+      <label class="tooltip">i<span class="tt">Textformat</span></label>
+      <select id="textFormat">
+        <option value="">-- auswählen --</option>
+        <option>Email</option>
+        <option>Brief</option>
+        <option>Memo</option>
+      </select>
+    </div>
+  </div>
+  <div class="row">
+    <div>
+      <label class="tooltip">i<span class="tt">Sprache</span></label>
+      <select id="language">
+        <option value="">-- auswählen --</option>
+        <option>Deutsch</option>
+        <option>Englisch</option>
+        <option>Französisch</option>
+      </select>
+    </div>
+    <div style="display:flex;align-items:end;gap:10px">
+      <button class="primary" id="btnGenerate">Prompt generieren</button>
+      <button class="ghost" id="btnReset">Zurücksetzen</button>
+    </div>
+  </div>
+  <img id="truckAnimation" src="https://cdn-icons-png.flaticon.com/512/616/616408.png" alt="LKW">
+  <div id="promptOutput" aria-live="polite"></div>
+  <div style="display:flex;gap:10px;margin-top:10px">
+    <button class="ghost" id="btnCopy">Kopieren</button>
+    <button class="ghost" id="btnFav">Zu Favoriten</button>
+  </div>
+  <div id="statusMsg" class="status hidden"></div>
+  <div id="rating">
+    <div class="box" id="rate1"></div>
+    <div class="box" id="rate2"></div>
+    <div class="box" id="rate3"></div>
+    <div class="box" id="rate4"></div>
+    <div class="box" id="rate5"></div>
+  </div>
+</div>
+
+<!-- FAVORITES -->
+<div id="favoritesPage" class="card hidden" style="max-width:880px;margin-left:auto;margin-right:auto">
+  <h2>Favoriten</h2>
+  <div style="display:flex;gap:8px;margin-bottom:12px">
+    <select id="favSort">
+      <option value="newest">Neueste zuerst</option>
+      <option value="oldest">Älteste zuerst</option>
+    </select>
+  </div>
+  <div id="favList"></div>
+</div>
+
+<script>
+const loginPage=document.getElementById('loginPage');
+const profilePage=document.getElementById('profilePage');
+const promptPage=document.getElementById('promptPage');
+const favoritesPage=document.getElementById('favoritesPage');
+const sideMenu=document.getElementById('sideMenu');
+const menuToggle=document.getElementById('menuToggle');
+let userData={};
+const ratingBoxes=[...document.querySelectorAll('#rating .box')];
+
+function showPage(page){
+  loginPage.classList.add('hidden');
+  profilePage.classList.add('hidden');
+  promptPage.classList.add('hidden');
+  favoritesPage.classList.add('hidden');
+  page.classList.remove('hidden');
+}
+function updateMenuDisplay(){sideMenu.style.display=Object.keys(userData).length?'flex':'none';}
+menuToggle.addEventListener('click',()=>{sideMenu.classList.toggle('closed');});
+
+// LOGIN
+document.getElementById('btnContinue').addEventListener('click',()=>{
+  showPage(promptPage);
+  updateMenuDisplay();
+});
+document.getElementById('btnSaveContinue').addEventListener('click',()=>{
+  const name=document.getElementById('name').value.trim();
+  const role=document.getElementById('role').value.trim();
+  const company=document.getElementById('company').value.trim();
+  const email=document.getElementById('email').value.trim();
+  const password=document.getElementById('password').value.trim();
+  if(!name||!role||!company||!email||!password){alert('Bitte alle Felder ausfüllen!');return;}
+  userData={name,role,company,email,password};
+  localStorage.setItem('logiUser',JSON.stringify(userData));
+  showPage(promptPage);
+  updateMenuDisplay();
+});
+
+// LOGOUT
+document.getElementById('btnLogout').addEventListener('click',()=>{
+  if(confirm('Wirklich abmelden? Alle gespeicherten Daten werden gelöscht.')){
+    localStorage.removeItem('logiUser');
+    userData={};
+    showPage(loginPage);
+    updateMenuDisplay();
+  }
+});
+
+// NAVIGATION
+document.getElementById('navProfile').addEventListener('click',()=>{showPage(profilePage);loadProfile();});
+document.getElementById('navPrompt').addEventListener('click',()=>{showPage(promptPage);});
+document.getElementById('navFavs').addEventListener('click',()=>{showPage(favoritesPage);renderFavs();});
+
+// PROFILE
+function loadProfile(){
+  document.getElementById('profileName').value=userData.name||'';
+  document.getElementById('profileRole').value=userData.role||'';
+  document.getElementById('profileCompany').value=userData.company||'';
+  document.getElementById('profileEmail').value=userData.email||'';
+}
+document.getElementById('btnSaveProfile').addEventListener('click',()=>{
+  userData.name=document.getElementById('profileName').value;
+  userData.role=document.getElementById('profileRole').value;
+  userData.company=document.getElementById('profileCompany').value;
+  userData.email=document.getElementById('profileEmail').value;
+  localStorage.setItem('logiUser',JSON.stringify(userData));
+  document.getElementById('profileStatus').textContent='Profil gespeichert';
+  document.getElementById('profileStatus').style.display='block';
+  setTimeout(()=>{document.getElementById('profileStatus').style.display='none';},2000);
+});
+document.getElementById('btnProfileCancel').addEventListener('click',()=>{loadProfile();});
+
+// PROMPT GENERIEREN
+const promptOutput=document.getElementById('promptOutput');
+const statusMsg=document.getElementById('statusMsg');
+const truckAnim=document.getElementById('truckAnimation');
+function generatePrompt(){
+  const keyword=document.getElementById('keyword').value.trim();
+  const additional=document.getElementById('additionalInfo').value.trim();
+  const recipientRole=document.getElementById('recipientRole').value;
+  const recipientName=document.getElementById('recipientName').value.trim();
+  const tone=document.getElementById('tone').value;
+  const textFormat=document.getElementById('textFormat').value;
+  const language=document.getElementById('language').value;
+  if(!keyword&&!recipientRole&&!recipientName&&!tone&&!textFormat&&!language&&!additional){alert('Bitte mindestens ein Feld ausfüllen!');return;}
+  truckAnim.style.transform='translateX(0)';
+  setTimeout(()=>{
+    truckAnim.style.transform='translateX(300px)';
+    let baseText="Erstelle eine professionelle Nachricht zum Thema [Thema], aufgrund [zusätzliche Informationen], für [Empfänger] in der Rolle [Rolle] im Ton [Tonfall] im Format [Textformat] auf [Sprache]. Absender ist [Name], [Rolle in der Firma] bei [Firmenname].";
+    const finalPrompt=baseText.replace('[Thema]',keyword||'')
+      .replace('[zusätzliche Informationen]',additional||'')
+      .replace('[Empfänger]',recipientName||'')
+      .replace('[Rolle]',recipientRole||'')
+      .replace('[Tonfall]',tone||'')
+      .replace('[Textformat]',textFormat||'')
+      .replace('[Sprache]',language||'')
+      .replace('[Name]',userData.name||'')
+      .replace('[Rolle in der Firma]',userData.role||'')
+      .replace('[Firmenname]',userData.company||'');
+    promptOutput.textContent=finalPrompt;
+    statusMsg.textContent='Prompt generiert!';
+    statusMsg.classList.remove('hidden');
+    setTimeout(()=>{statusMsg.classList.add('hidden');},1800);
+    updateRating();
+  },600);
+}
+document.getElementById('btnGenerate').addEventListener('click',generatePrompt);
+document.getElementById('btnReset').addEventListener('click',()=>{
+  document.getElementById('keyword').value='';
+  document.getElementById('additionalInfo').value='';
+  document.getElementById('recipientRole').value='';
+  document.getElementById('recipientName').value='';
+  document.getElementById('tone').value='';
+  document.getElementById('textFormat').value='';
+  document.getElementById('language').value='';
+  promptOutput.textContent='';
+  updateRating();
+});
+
+// RATING
+function updateRating(){
+  const fields=[document.getElementById('keyword').value,
+                document.getElementById('additionalInfo').value,
+                document.getElementById('recipientRole').value,
+                document.getElementById('recipientName').value,
+                document.getElementById('tone').value,
+                document.getElementById('textFormat').value,
+                document.getElementById('language').value];
+  const count=fields.filter(v=>v).length;
+  ratingBoxes.forEach((b,i)=>b.classList.toggle('active',i<Math.round(count/7*5)));
+}
+
+// FAVORITEN
+let favs=[];
+document.getElementById('btnFav').addEventListener('click',()=>{
+  if(promptOutput.textContent){
+    favs.push({prompt:promptOutput.textContent,created:new Date()});
+    renderFavs();
+    statusMsg.textContent='Favorit hinzugefügt!';
+    statusMsg.classList.remove('hidden');
+    setTimeout(()=>{statusMsg.classList.add('hidden');},1800);
+  }
+});
+function renderFavs(){
+  const favList=document.getElementById('favList');
+  favList.innerHTML='';
+  const sorted=favs.sort((a,b)=>document.getElementById('favSort').value==='newest'?b.created-a.created:a.created-b.created);
+  sorted.forEach((f,i)=>{
+    const div=document.createElement('div');
+    div.className='fav-item';
+    div.innerHTML=`<div class="fav-meta">Erstellt: ${f.created.toLocaleString()}</div>${f.prompt}<button style="margin-top:4px" class="ghost" onclick="removeFav(${i})">Entfernen</button>`;
+    favList.appendChild(div);
+  });
+}
+function removeFav(index){favs.splice(index,1);renderFavs();}
+document.getElementById('favSort').addEventListener('change',renderFavs);
+
+// COPY
+document.getElementById('btnCopy').addEventListener('click',()=>{
+  if(promptOutput.textContent){
+    navigator.clipboard.writeText(promptOutput.textContent);
+    statusMsg.textContent='Prompt kopiert!';
+    statusMsg.classList.remove('hidden');
+    setTimeout(()=>{statusMsg.classList.add('hidden');},1500);
+  }
+});
+
+// PROFILE PIC
+const profilePicInput=document.getElementById('profilePic');
+const profilePreview=document.getElementById('profilePreview');
+profilePicInput.addEventListener('change',e=>{
+  const file=e.target.files[0];
+  if(file){
+    const reader=new FileReader();
+    reader.onload=e=>{profilePreview.src=e.target.result;document.getElementById('profilePicMenu').src=e.target.result;};
+    reader.readAsDataURL(file);
+  }
+});
+document.getElementById('btnRemovePic').addEventListener('click',()=>{
+  profilePreview.src='https://via.placeholder.com/120?text=LP';
+  document.getElementById('profilePicMenu').src='https://via.placeholder.com/56?text=LP';
+  profilePicInput.value='';
+});
+
+// LOAD USER DATA
+const saved=localStorage.getItem('logiUser');
+if(saved){userData=JSON.parse(saved);updateMenuDisplay();showPage(promptPage);}
+else{showPage(loginPage);}
+</script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="de">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>LogiPrompt v2.3</title>
@@ -144,3 +533,4 @@ function generatePrompt() {
 </script>
 </body>
 </html>
+
