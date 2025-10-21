@@ -1,234 +1,445 @@
-<!DOCTYPE html>
+<!--
+  PromptLab — Single-file index.html
+  Version: 2.2-final
+  Erstellt für Nutzer: Colin Schmielewski
+  Datum: 2025-10-21
+  Hinweise: Statische Demo. Auth lokal (SHA-256 + localStorage). Nicht für Produktion.
+-->
+<!doctype html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LogiPrompt 3.0 Grundbaustein</title>
-<style>
-body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f0f4f8; color:#333; }
-.container { max-width: 650px; margin: 50px auto; padding: 25px; background:#fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-h1,h2 { text-align:center; color:#004080; }
-label { display:block; margin-top:12px; font-weight:600; }
-input, select, textarea, button { width:100%; padding:10px; margin-top:6px; border-radius:8px; border:1px solid #ccc; font-size:1rem; }
-textarea { resize: vertical; min-height:60px; }
-button { background:#008cff; color:white; border:none; cursor:pointer; margin-top:15px; font-weight:600; transition:0.2s; }
-button:hover { background:#005bb5; }
-#promptResult { background:#e6f0ff; padding:12px; border-radius:8px; margin-top:15px; white-space: pre-wrap; min-height:50px; }
-#promptRating { margin-top:15px; display:flex; gap:5px; justify-content:center; }
-#promptRating .box { width:30px; height:30px; background:#ddd; border-radius:6px; transition:0.2s; }
-#promptRating .box.filled { background:#28a745; }
-#favoritesList { margin-top:15px; background:#f0f8ff; padding:10px; border-radius:8px; max-height:150px; overflow-y:auto; }
-#favoritesList div { padding:6px; border-bottom:1px solid #ccc; cursor:pointer; }
-#favoritesList div:hover { background:#d0e4ff; }
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PromptLab — Prompt-Generator</title>
+  <style>
+    :root{
+      --bg:#e9f6ff;
+      --panel:#ffffff;
+      --accent:#1e6fb3;
+      --accent-2:#0d4f87;
+      --muted:#6b7280;
+      --danger:#e06a6a;
+      --success:#21a179;
+      --glass: rgba(255,255,255,0.6);
+      --text:#032a3a;
+      --required:#fff0f0;
+    }
+    [data-theme="dark"]{
+      --bg:#031523;
+      --panel:#071428;
+      --accent:#4aa3ff;
+      --accent-2:#0b63a0;
+      --muted:#9fb6c8;
+      --text:#dceffb;
+      --required:#332b2b;
+    }
+    *{box-sizing:border-box;font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
+    body,html,#app{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#ffffff);color:var(--text)}
+    .app{display:flex;min-height:100vh}
+    .nav{width:260px;padding:18px;background:linear-gradient(180deg,var(--panel),var(--glass));border-right:1px solid rgba(0,0,0,0.06);display:flex;flex-direction:column}
+    .brand{display:flex;gap:10px;align-items:center}
+    .logo{width:46px;height:46px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700}
+    .menu{margin-top:14px;display:flex;flex-direction:column;gap:6px}
+    .menu button{background:none;border:none;padding:10px;border-radius:8px;text-align:left;cursor:pointer}
+    .menu button.active{background:rgba(13,79,135,0.08);font-weight:600}
+    header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid rgba(0,0,0,0.06)}
+    .content{flex:1;padding:18px}
+    .card{background:var(--panel);padding:16px;border-radius:12px;box-shadow:0 6px 18px rgba(13,79,135,0.04)}
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:16px}
+    label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
+    input[type=text],textarea,select{padding:10px;border-radius:8px;border:1px solid rgba(0,0,0,0.08);min-width:200px}
+    textarea{min-height:120px;resize:vertical}
+    .required label::after{content:" *";color:var(--danger)}
+    input[required],select[required],textarea[required]{background:var(--required)}
+    .toolbar{display:flex;gap:8px}
+    .btn{padding:8px 12px;border-radius:8px;border:none;cursor:pointer;background:var(--accent);color:#fff}
+    .btn.ghost{background:transparent;border:1px solid rgba(0,0,0,0.06);color:var(--text)}
+    .btn.red{background:var(--danger)}
+    .list{display:flex;flex-direction:column;gap:8px}
+    .prompt-item{padding:10px;border-radius:8px;border:1px solid rgba(0,0,0,0.04);display:flex;justify-content:space-between;align-items:flex-start}
+    .meta{font-size:12px;color:var(--muted)}
+    .truck-wrap{height:80px;overflow:hidden;position:relative}
+    .truck{width:80px;height:40px;border-radius:8px;position:absolute;left:-120px;top:20px;display:flex;align-items:center;justify-content:center;color:#fff;background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+    .truck.generate{animation:drive 1.6s linear forwards}
+    @keyframes drive{from{left:-120px}to{left:110%}}
+    .toast{position:fixed;right:20px;bottom:20px;padding:10px 14px;border-radius:8px;background:var(--panel);box-shadow:0 8px 30px rgba(0,0,0,0.12)}
+    .avatar{width:84px;height:84px;border-radius:12px;object-fit:cover;border:3px solid var(--glass)}
+    .chip{padding:6px 8px;border-radius:999px;background:rgba(0,0,0,0.04);font-size:12px}
+    @media(max-width:900px){.nav{position:fixed;left:-300px;z-index:10}.nav.open{left:0}.grid{grid-template-columns:1fr}}
+  </style>
 </head>
 <body>
+<div id="app" class="app" data-theme="light">
+  <aside class="nav card">
+    <div class="brand">
+      <div class="logo">PL</div>
+      <div>
+        <div style="font-weight:700">PromptLab</div>
+        <div style="font-size:12px;color:var(--muted)">Deine KI-Prompt Werkstatt</div>
+      </div>
+    </div>
+    <div id="greeting" style="margin-top:10px;color:var(--muted)">Bitte anmelden</div>
+    <nav class="menu" aria-label="Main menu">
+      <button data-route="create" class="active">Prompt erstellen</button>
+      <button data-route="favorites">Favoriten</button>
+      <button data-route="history">Verlauf</button>
+      <button data-route="profile">Profil</button>
+      <div style="height:1px;background:linear-gradient(90deg,transparent,var(--accent));margin:8px 0;border-radius:4px"></div>
+      <button id="logoutBtn" style="margin-top:8px;display:none">Abmelden</button>
+    </nav>
+    <div style="margin-top:auto;font-size:12px;color:var(--muted)">
+      <div>Theme</div>
+      <div style="display:flex;gap:6px;margin-top:6px">
+        <button class="chip" id="theme-blue">Hellblau</button>
+        <button class="chip" id="theme-dark">Dunkelmodus</button>
+      </div>
+    </div>
+  </aside>
 
-<!-- ===== Login-Seite ===== -->
-<div class="container" id="loginPage">
-  <h1>🚛 LogiPrompt 3.0 - Login</h1>
-  <label for="userName">Name:</label>
-  <input type="text" id="userName" placeholder="Max Mustermann">
+  <main class="content">
+    <header>
+      <div class="toolbar">
+        <button id="mobileNavToggle" class="btn ghost">☰</button>
+        <div id="statusBar" style="font-size:13px;color:var(--muted);margin-left:8px">Bereit</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div id="userChip" style="font-size:13px;color:var(--muted)">Nicht angemeldet</div>
+      </div>
+    </header>
 
-  <label for="userRole">Rolle:</label>
-  <input type="text" id="userRole" placeholder="Kundenberater">
+    <section id="view" style="margin-top:14px">
+      <!-- CREATE PAGE -->
+      <div data-page="create">
+        <div class="grid">
+          <div>
+            <div class="card">
+              <h3>Prompt erstellen</h3>
 
-  <label for="userCompany">Firma:</label>
-  <input type="text" id="userCompany" placeholder="Gebr. Müller GmbH">
+              <!-- Fields exactly as requested -->
+              <div class="form-group required">
+                <label for="keyword">Schlüsselwort / Thema</label>
+                <input id="keyword" placeholder="z. B. nachhaltiges Produkt, Bewerbung" required title="Das zentrale Stichwort oder Thema" />
+                <div class="hint">Wichtig: Kernthema für den Prompt.</div>
+              </div>
 
-  <button id="loginBtn">Login</button>
+              <div class="form-row" style="display:flex;gap:12px;margin-bottom:12px">
+                <div style="flex:1" class="form-group">
+                  <label for="role">Adressat / Rolle</label>
+                  <input id="role" placeholder="z. B. Marketing-Manager, Lehrer" title="Für welche Rolle / Position ist der Text gedacht?" />
+                </div>
+                <div style="width:220px" class="form-group">
+                  <label for="recipient">Empfänger / Name</label>
+                  <input id="recipient" placeholder="z. B. Anna, Kunden" title="Name des Empfängers (optional)" />
+                </div>
+              </div>
+
+              <div class="form-row" style="display:flex;gap:12px;margin-bottom:12px">
+                <div style="flex:1" class="form-group required">
+                  <label for="tone">Tonfall</label>
+                  <select id="tone" required title="Wähle den gewünschten Tonfall">
+                    <option>Neutral</option>
+                    <option>Freundlich</option>
+                    <option>Formell</option>
+                    <option>Witzig</option>
+                    <option>Ernst</option>
+                    <option>Überzeugend</option>
+                    <option>Kreativ</option>
+                    <option>Sarkastisch</option>
+                    <option>Poetisch</option>
+                    <option>Technisch</option>
+                  </select>
+                </div>
+                <div style="width:220px" class="form-group required">
+                  <label for="format">Textformat</label>
+                  <select id="format" required title="z. B. E-Mail, Blogpost, Produktbeschreibung">
+                    <option>E-Mail</option>
+                    <option>Blogpost</option>
+                    <option>Produktbeschreibung</option>
+                    <option>Social-Media-Post</option>
+                    <option>Formeller Brief</option>
+                    <option>Liste / Stichpunkte</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row" style="display:flex;gap:12px;margin-bottom:12px">
+                <div style="flex:1" class="form-group required">
+                  <label for="lang">Sprache</label>
+                  <select id="lang" required title="Wähle die Sprache">
+                    <option>Deutsch</option>
+                    <option>Englisch</option>
+                    <option>Mehrsprachig</option>
+                  </select>
+                </div>
+                <div style="width:140px" class="form-group">
+                  <label for="length">Länge</label>
+                  <select id="length" title="Erwartete Länge">
+                    <option>Kurz</option>
+                    <option>Mittel</option>
+                    <option>Lang</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="details">Zusätzliche Details</label>
+                <textarea id="details" placeholder="Weitere Hinweise, Tonvorgaben, Stichpunkte..." title="Optionale Zusatzinfos"></textarea>
+              </div>
+
+              <!-- readonly generated prompt -->
+              <div class="form-group required" style="margin-top:8px">
+                <label for="generated">Generierter Prompt</label>
+                <textarea id="generated" readonly required title="Der automatisch erzeugte Prompt erscheint hier"></textarea>
+                <div class="hint">Der Prompt wird beim Klick auf «Prompt generieren» automatisch erstellt (Lückentext).</div>
+              </div>
+
+              <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
+                <button id="generateBtn" class="btn">Prompt generieren</button>
+                <button id="saveBtn" class="btn ghost">Speichern</button>
+                <button id="favBtn" class="btn ghost">❤ Favorit</button>
+                <button id="resetBtn" class="btn ghost">Zurücksetzen</button>
+              </div>
+
+              <div style="margin-top:10px" class="truck-wrap"><div id="truck" class="truck">🚚</div></div>
+
+              <div style="margin-top:12px;font-size:13px;color:var(--muted)">Ausgabe</div>
+              <div id="outputBox" class="card" style="min-height:100px;margin-top:8px;display:flex;justify-content:space-between;align-items:flex-start">
+                <div id="outputText" style="white-space:pre-wrap;flex:1;padding-right:12px"></div>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <button id="copyBtn" class="btn ghost">Kopieren</button>
+                  <button id="downloadBtn" class="btn ghost">Als .txt</button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <aside>
+            <div class="card">
+              <h4>Hilfe & Aktionen</h4>
+              <div style="font-size:13px;color:var(--muted)">Tooltips: Fahre über ein Feld oder tippe auf das Feld, um Hilfetexte zu sehen.</div>
+              <hr />
+              <div style="margin-top:8px">
+                <div style="font-weight:600">Schnellaktionen</div>
+                <div style="display:flex;gap:8px;margin-top:8px">
+                  <button id="copyGenerated" class="btn ghost">Prompt kopieren</button>
+                  <button id="previewBtn" class="btn ghost">Vorschau</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card" style="margin-top:12px">
+              <h4>Letzte Prompts</h4>
+              <div id="recentList" class="list"></div>
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      <!-- FAVORITES -->
+      <div data-page="favorites" style="display:none">
+        <div class="card">
+          <h3>Favoriten</h3>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+            <input id="favFilter" placeholder="Favoriten durchsuchen" />
+            <select id="favSort"><option value="new">Neueste zuerst</option><option value="old">Älteste zuerst</option></select>
+            <button id="clearFavFilter" class="btn ghost">Filter löschen</button>
+          </div>
+          <div id="favList" class="list"></div>
+        </div>
+      </div>
+
+      <!-- HISTORY -->
+      <div data-page="history" style="display:none">
+        <div class="card">
+          <h3>Verlauf</h3>
+          <div id="historyList" class="list"></div>
+        </div>
+      </div>
+
+      <!-- PROFILE -->
+      <div data-page="profile" style="display:none">
+        <div class="grid">
+          <div>
+            <div class="card">
+              <h3>Profil</h3>
+              <div style="display:flex;gap:12px;align-items:center">
+                <img id="profilePic" src="https://via.placeholder.com/84" alt="Avatar" class="avatar" />
+                <div>
+                  <div id="profileName" style="font-weight:700">Nicht angemeldet</div>
+                  <div id="profileRole" style="font-size:13px;color:var(--muted)">—</div>
+                </div>
+              </div>
+
+              <hr />
+              <div class="form-group">
+                <label for="editName">Name</label>
+                <input id="editName" placeholder="Vorname Nachname" />
+              </div>
+              <div class="form-group">
+                <label for="editRole">Rolle</label>
+                <input id="editRole" placeholder="z. B. Autor, Entwickler" />
+              </div>
+              <div class="form-group">
+                <label for="editCompany">Firma</label>
+                <input id="editCompany" placeholder="Firma (optional)" />
+              </div>
+              <div class="form-group">
+                <label for="editEmail">E-Mail (optional)</label>
+                <input id="editEmail" placeholder="email@beispiel.de" />
+              </div>
+              <div class="form-group">
+                <label for="editPic">Profilbild URL</label>
+                <input id="editPic" placeholder="https://..." />
+              </div>
+
+              <div style="display:flex;gap:8px;margin-top:8px">
+                <button id="saveProfile" class="btn">Profil speichern</button>
+                <button id="toggleStay" class="btn ghost">Angemeldet bleiben: AUS</button>
+              </div>
+
+              <hr />
+
+              <h4>Sicherheit</h4>
+              <div class="form-group required">
+                <label for="loginName">Benutzername</label>
+                <input id="loginName" required placeholder="Benutzername" />
+              </div>
+              <div class="form-group required">
+                <label for="loginPass">Passwort</label>
+                <input id="loginPass" type="password" required placeholder="Passwort" />
+              </div>
+              <div style="display:flex;gap:8px;margin-top:8px">
+                <button id="createUser" class="btn">Benutzer erstellen/aktualisieren</button>
+                <button id="loginBtn" class="btn ghost">Anmelden</button>
+              </div>
+
+              <div style="margin-top:10px;font-size:12px;color:var(--muted)">Hinweis: Demo speichert verschlüsselt lokal (localStorage). Produktionssystem benötigt Backend.</div>
+            </div>
+          </div>
+
+          <aside>
+            <div class="card">
+              <h4>Einstellungen</h4>
+              <div class="form-group">
+                <label for="prefTheme">Theme</label>
+                <select id="prefTheme"><option value="light">Hell</option><option value="dark">Dunkel</option></select>
+              </div>
+              <div class="form-group">
+                <label>Account Optionen</label>
+                <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
+                  <label><input type="checkbox" id="optAutoSave"> Automatisch speichern</label>
+                  <label><input type="checkbox" id="optConfirmDelete"> Löscheinträge bestätigen</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="card" style="margin-top:12px">
+              <h4>Über</h4>
+              <div style="font-size:13px;color:var(--muted)">Version: 2.2-final — lokale Demo</div>
+            </div>
+          </aside>
+        </div>
+      </div>
+
+    </section>
+  </main>
 </div>
 
-<!-- ===== Prompt-Seite ===== -->
-<div class="container" id="promptPage" style="display:none;">
-  <h2>🎯 Prompt erstellen</h2>
-
-  <label for="keyword">Schlüsselwort / Thema:</label>
-  <input type="text" id="keyword" placeholder="z.B. Ermahnung, Lieferverzögerung">
-
-  <label for="roleTarget">Adressat / Rolle:</label>
-  <input type="text" id="roleTarget" placeholder="z.B. Kundenberater">
-
-  <label for="recipient">Empfänger / Name:</label>
-  <input type="text" id="recipient" placeholder="z.B. Herr Müller">
-
-  <label for="tone">Tonfall:</label>
-  <select id="tone">
-    <option value="">-- wählen --</option>
-    <option value="freundlich">Freundlich</option>
-    <option value="sachlich">Sachlich</option>
-    <option value="formell">Formell</option>
-    <option value="locker">Locker</option>
-    <option value="ernst">Ernst</option>
-  </select>
-
-  <label for="format">Textformat:</label>
-  <select id="format">
-    <option value="">-- wählen --</option>
-    <option value="E-Mail">E-Mail</option>
-    <option value="Brief">Brief</option>
-    <option value="Nachricht">Nachricht</option>
-    <option value="Tabelle">Tabelle</option>
-  </select>
-
-  <label for="language">Sprache:</label>
-  <select id="language">
-    <option value="">-- wählen --</option>
-    <option value="Deutsch">Deutsch</option>
-    <option value="Englisch">Englisch</option>
-    <option value="Französisch">Französisch</option>
-  </select>
-
-  <label for="details">Zusätzliche Details:</label>
-  <textarea id="details" placeholder="Weitere Infos ..."></textarea>
-
-  <button id="generateBtn">🚀 Prompt generieren</button>
-
-  <div id="promptResult"></div>
-
-  <div id="promptRating">
-    <div class="box"></div>
-    <div class="box"></div>
-    <div class="box"></div>
-    <div class="box"></div>
-    <div class="box"></div>
-  </div>
-
-  <h3>⭐ Favoriten</h3>
-  <div id="favoritesList"></div>
-  <button id="saveFavoriteBtn">Favorit speichern</button>
-</div>
+<!-- toast container -->
+<div id="toastRoot"></div>
 
 <script>
-  // ===== Login =====
-  const loginBtn = document.getElementById("loginBtn");
-  const loginPage = document.getElementById("loginPage");
-  const promptPage = document.getElementById("promptPage");
+// Helper selectors
+const qs = s => document.querySelector(s);
+const qsa = s => Array.from(document.querySelectorAll(s));
 
-  loginBtn.addEventListener("click", () => {
-    const name = document.getElementById("userName").value.trim();
-    const role = document.getElementById("userRole").value.trim();
-    const company = document.getElementById("userCompany").value.trim();
+// Router
+qsa('.menu button').forEach(b=>b.addEventListener('click', ()=> navigate(b.dataset.route)));
+function navigate(route){ qsa('[data-page]').forEach(p=>p.style.display='none'); const el = document.querySelector(`[data-page="${route}"]`); if(el) el.style.display='block'; qsa('.menu button').forEach(b=>b.classList.toggle('active', b.dataset.route===route)); }
 
-    if(!name || !role || !company){
-      alert("Bitte alle Felder ausfüllen!");
-      return;
-    }
+// State & storage keys
+let state = { user: null, stay: false };
+const KEY_USER = 'pl_user_v2';
+const KEY_PROMPTS = 'pl_prompts_v2';
 
-    localStorage.setItem("userName", name);
-    localStorage.setItem("userRole", role);
-    localStorage.setItem("userCompany", company);
+// Toasts
+function toast(msg, t=3000){ const root = qs('#toastRoot'); const d = document.createElement('div'); d.className='toast card'; d.textContent=msg; root.appendChild(d); setTimeout(()=>d.remove(), t); }
 
-    loginPage.style.display = "none";
-    promptPage.style.display = "block";
-  });
+// Prompts storage
+function loadPrompts(){ try{ return JSON.parse(localStorage.getItem(KEY_PROMPTS)||'[]') } catch(e){ return [] }}
+function savePrompts(arr){ localStorage.setItem(KEY_PROMPTS, JSON.stringify(arr)); }
+function uid(){ return 'id_'+Math.random().toString(36).slice(2,12) }
 
-  // ===== Automatische Anpassung je Schlüsselwort =====
-  const keywordInput = document.getElementById("keyword");
-  const toneSelect = document.getElementById("tone");
-  const formatSelect = document.getElementById("format");
+// Render recent
+function renderRecent(){ const el = qs('#recentList'); el.innerHTML=''; const items = loadPrompts().slice(-6).reverse(); items.forEach(p=>{ const d=document.createElement('div'); d.className='prompt-item'; d.innerHTML = `<div><strong>${escapeHtml(p.title)}</strong><div class="meta">${new Date(p.created).toLocaleString()}</div></div><div style="display:flex;flex-direction:column;gap:6px"><button class="btn ghost" data-id="${p.id}" data-action="open">Öffnen</button></div>`; el.appendChild(d); }); }
 
-  const keywordMap = {
-    "Ermahnung": {tone:"ernst", format:"E-Mail"},
-    "Lob": {tone:"freundlich", format:"E-Mail"},
-    "Anfrage": {tone:"sachlich", format:"Nachricht"},
-    "Lieferverzögerung": {tone:"sachlich", format:"E-Mail"},
-    "Intern": {tone:"neutral", format:"Tabelle"}
-  };
+// Open prompt by id (populate form)
+function openPromptById(id){ const p = loadPrompts().find(x=>x.id===id); if(!p) return; navigate('create'); qs('#keyword').value = p.keyword||''; qs('#role').value = p.role||''; qs('#recipient').value = p.recipient||''; qs('#tone').value = p.tone||'Neutral'; qs('#format').value = p.format||'E-Mail'; qs('#lang').value = p.lang||'Deutsch'; qs('#details').value = p.details||''; qs('#generated').value = p.text||''; qs('#outputText').textContent = p.text||''; qs('#keyword').focus(); toast('Prompt geladen'); }
 
-  keywordInput.addEventListener("input", () => {
-    const val = keywordInput.value.trim();
-    if(keywordMap[val]){
-      toneSelect.value = keywordMap[val].tone;
-      formatSelect.value = keywordMap[val].format;
-    }
-  });
+// Build Lückentext prompt using exact fields (German template similar to original)
+function buildPrompt(){ const keyword = qs('#keyword').value.trim(); const role = qs('#role').value.trim(); const recipient = qs('#recipient').value.trim(); const tone = qs('#tone').value; const format = qs('#format').value; const lang = qs('#lang').value; const length = qs('#length').value; const details = qs('#details').value.trim(); if(!keyword){ toast('Bitte "Schlüsselwort / Thema" ausfüllen'); return null; } // Template
+  let p = `Aufgabe: Erstelle einen ${format} zum Thema "${keyword}".`;
+  if(role) p += ` Der Text richtet sich an ${role}.`;
+  if(recipient) p += ` Empfänger: ${recipient}.`;
+  p += `\nTon: ${tone}. Sprache: ${lang}. Erwartete Länge: ${length}.`;
+  if(details) p += `\nZusätzliche Details: ${details}.`;
+  p += `\n\nBitte liefere eine klare, strukturierte und gut lesbare Version, die sofort verwendet werden kann.`;
+  return p; }
 
-  // ===== Prompt generieren & Bewertung =====
-  const generateBtn = document.getElementById("generateBtn");
-  const promptResult = document.getElementById("promptResult");
-  const boxes = document.querySelectorAll("#promptRating .box");
+// Generate
+function generate(){ const prompt = buildPrompt(); if(!prompt) return; const truck = qs('#truck'); truck.classList.remove('generate'); void truck.offsetWidth; truck.classList.add('generate'); qs('#statusBar').textContent='Generiere...'; setTimeout(()=>{ qs('#generated').value = prompt; qs('#outputText').textContent = prompt; addPromptToStorage({ title: qs('#keyword').value.trim(), keyword: qs('#keyword').value.trim(), role: qs('#role').value.trim(), recipient: qs('#recipient').value.trim(), tone: qs('#tone').value, format: qs('#format').value, lang: qs('#lang').value, length: qs('#length').value, details: qs('#details').value.trim(), text: prompt, created: Date.now() }); qs('#statusBar').textContent='Bereit'; toast('Prompt generiert'); },900); }
 
-  generateBtn.addEventListener("click", () => {
-    const keyword = document.getElementById("keyword").value.trim();
-    const roleTarget = document.getElementById("roleTarget").value.trim();
-    const recipient = document.getElementById("recipient").value.trim();
-    const tone = document.getElementById("tone").value;
-    const format = document.getElementById("format").value;
-    const language = document.getElementById("language").value;
-    const details = document.getElementById("details").value.trim();
+function addPromptToStorage(item){ const arr = loadPrompts(); arr.push({ id: uid(), ...item }); savePrompts(arr); renderRecent(); renderHistory(); renderFavorites(); }
 
-    const userName = localStorage.getItem("userName");
-    const userRole = localStorage.getItem("userRole");
-    const userCompany = localStorage.getItem("userCompany");
+function saveCurrent(asFavorite=false){ const text = qs('#generated').value.trim(); const title = qs('#keyword').value.trim() || ('Prompt '+new Date().toLocaleString()); if(!text){ toast('Kein Prompt zum Speichern.'); return } const arr = loadPrompts(); arr.push({ id: uid(), title, keyword: qs('#keyword').value, role: qs('#role').value, recipient: qs('#recipient').value, tone: qs('#tone').value, format: qs('#format').value, lang: qs('#lang').value, length: qs('#length').value, details: qs('#details').value, text, favorite: !!asFavorite, created: Date.now() }); savePrompts(arr); renderRecent(); renderHistory(); renderFavorites(); toast('Prompt gespeichert'); }
 
-    const promptText = `Schlüsselwort: ${keyword || "–"}
-Adressat / Rolle: ${roleTarget || "–"}
-Empfänger / Name: ${recipient || "–"}
-Tonfall: ${tone || "–"}
-Textformat: ${format || "–"}
-Sprache: ${language || "–"}
-Zusätzliche Details: ${details || "–"}
+// Favorites
+function renderFavorites(filter='', sort='new'){ let list = loadPrompts().filter(x=>x.favorite); if(filter) list = list.filter(p=>p.title.toLowerCase().includes(filter.toLowerCase())||p.text.toLowerCase().includes(filter.toLowerCase())); list.sort((a,b)=> sort==='new' ? b.created-a.created : a.created-b.created); const el = qs('#favList'); el.innerHTML=''; if(list.length===0){ el.innerHTML='<div style="color:var(--muted)">Keine Favoriten gefunden.</div>'; return } list.forEach(p=>{ const d=document.createElement('div'); d.className='prompt-item'; d.innerHTML = `<div style="flex:1"><strong>${escapeHtml(p.title)}</strong><div class="meta">${new Date(p.created).toLocaleString()}</div><div class="small">${escapeHtml(p.text.slice(0,160))}${p.text.length>160?'...':''}</div></div><div style="display:flex;flex-direction:column;gap:6px"><button class="btn" data-id="${p.id}" data-action="open">Öffnen</button><button class="btn ghost" data-id="${p.id}" data-action="copy">Kopieren</button><button class="btn red" data-id="${p.id}" data-action="del">Löschen</button></div>`; el.appendChild(d); }); }
 
-Login-Daten:
-Name: ${userName}
-Rolle: ${userRole}
-Firma: ${userCompany}`;
+// History
+function renderHistory(){ const el = qs('#historyList'); el.innerHTML=''; const list = loadPrompts().slice().reverse(); list.forEach(p=>{ const d=document.createElement('div'); d.className='prompt-item'; d.innerHTML = `<div style="flex:1"><strong>${escapeHtml(p.title)}</strong><div class="meta">${new Date(p.created).toLocaleString()}</div></div><div style="display:flex;flex-direction:column;gap:6px"><button class="btn ghost" data-id="${p.id}" data-action="open">Laden</button><button class="btn" data-id="${p.id}" data-action="fav">❤</button></div>`; el.appendChild(d); }); }
 
-    promptResult.textContent = promptText;
+// Copy & Download
+async function copyText(t){ try{ await navigator.clipboard.writeText(t); toast('In die Zwischenablage kopiert'); } catch(e){ toast('Kopieren fehlgeschlagen'); } }
+qs('#copyBtn').addEventListener('click', ()=> copyText(qs('#generated').value || qs('#outputText').textContent)); qs('#copyGenerated').addEventListener('click', ()=> copyText(qs('#generated').value || qs('#outputText').textContent)); qs('#copyForm').?.addEventListener?.('click',()=>{}); // safe noop
+qs('#downloadBtn').addEventListener('click', ()=>{ const data = qs('#generated').value || qs('#outputText').textContent; const blob = new Blob([data],{type:'text/plain'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href=url; a.download='prompt.txt'; a.click(); URL.revokeObjectURL(url); toast('Download gestartet'); });
 
-    // Bewertung
-    boxes.forEach(b => b.classList.remove("filled"));
-    let score = 0;
-    if(keyword) score++;
-    if(roleTarget) score++;
-    if(recipient) score++;
-    if(tone || format) score++;
-    if(language || details) score++;
-    for(let i=0;i<score;i++){ boxes[i].classList.add("filled"); }
-  });
+// Dynamic button actions (open, copy, del, fav)
+document.addEventListener('click', (e)=>{
+  const btn = e.target.closest('button[data-id]'); if(!btn) return; const id = btn.dataset.id; const act = btn.dataset.action;
+  if(act==='open') openPromptById(id);
+  else if(act==='copy'){ const p = loadPrompts().find(x=>x.id===id); if(p) copyText(p.text); }
+  else if(act==='del'){ if(qs('#optConfirmDelete')?.checked){ if(!confirm('Eintrag wirklich löschen?')) return } const rest = loadPrompts().filter(x=>x.id!==id); savePrompts(rest); renderFavorites(qs('#favFilter').value, qs('#favSort').value); renderHistory(); renderRecent(); toast('Eintrag gelöscht'); }
+  else if(act==='fav'){ const arr = loadPrompts(); const p = arr.find(x=>x.id===id); if(p){ p.favorite = !p.favorite; savePrompts(arr); renderFavorites(); renderHistory(); toast(p.favorite? 'Favorit hinzugefügt':'Favorit entfernt'); } }
+});
 
-  // ===== Favoriten-Funktion =====
-  const favoritesList = document.getElementById("favoritesList");
-  const saveFavoriteBtn = document.getElementById("saveFavoriteBtn");
+// Save / Fav / Generate / Reset bindings
+qs('#generateBtn').addEventListener('click', generate);
+qs('#saveBtn').addEventListener('click', ()=> saveCurrent(false));
+qs('#favBtn').addEventListener('click', ()=> saveCurrent(true));
+qs('#resetBtn').addEventListener('click', ()=>{ qs('#keyword').value=''; qs('#role').value=''; qs('#recipient').value=''; qs('#tone').value='Neutral'; qs('#format').value='E-Mail'; qs('#lang').value='Deutsch'; qs('#length').value='Mittel'; qs('#details').value=''; qs('#generated').value=''; qs('#outputText').textContent=''; toast('Formular zurückgesetzt'); });
 
-  function loadFavorites(){
-    favoritesList.innerHTML = "";
-    const favs = JSON.parse(localStorage.getItem("favorites")||"[]");
-    favs.forEach((f)=>{
-      const div = document.createElement("div");
-      div.textContent = f.keyword + " → " + f.recipient;
-      div.addEventListener("click", () => {
-        document.getElementById("keyword").value = f.keyword;
-        document.getElementById("roleTarget").value = f.roleTarget;
-        document.getElementById("recipient").value = f.recipient;
-        document.getElementById("tone").value = f.tone;
-        document.getElementById("format").value = f.format;
-        document.getElementById("language").value = f.language;
-        document.getElementById("details").value = f.details;
-        promptResult.textContent = f.prompt;
-      });
-      favoritesList.appendChild(div);
-    });
-  }
+// favorites controls
+qs('#favFilter').addEventListener('input', e=> renderFavorites(e.target.value, qs('#favSort').value)); qs('#favSort').addEventListener('change', e=> renderFavorites(qs('#favFilter').value, e.target.value)); qs('#clearFavFilter').addEventListener('click', ()=>{ qs('#favFilter').value=''; renderFavorites(); });
 
-  saveFavoriteBtn.addEventListener("click", () => {
-    const keyword = document.getElementById("keyword").value.trim();
-    const roleTarget = document.getElementById("roleTarget").value.trim();
-    const recipient = document.getElementById("recipient").value.trim();
-    const tone = document.getElementById("tone").value;
-    const format = document.getElementById("format").value;
-    const language = document.getElementById("language").value;
-    const details = document.getElementById("details").value.trim();
-    const prompt = promptResult.textContent;
+// User: hash + local user storage
+async function hashPw(pw){ const enc = new TextEncoder().encode(pw); const h = await crypto.subtle.digest('SHA-256', enc); return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,'0')).join(''); }
+qs('#createUser').addEventListener('click', async ()=>{ const uname = qs('#loginName').value.trim(); const pw = qs('#loginPass').value; if(!uname||!pw){ toast('Benutzername & Passwort erforderlich'); return } const hh = await hashPw(pw); const user = { username: uname, hash: hh, profile: { name: qs('#editName').value, role: qs('#editRole').value, company: qs('#editCompany').value, email: qs('#editEmail').value, pic: qs('#editPic').value } }; localStorage.setItem(KEY_USER, JSON.stringify(user)); toast('Benutzer erstellt (lokal)'); });
+qs('#loginBtn').addEventListener('click', async ()=>{ const stored = JSON.parse(localStorage.getItem(KEY_USER)||'null'); if(!stored){ toast('Kein Benutzer vorhanden'); return } const uname = qs('#loginName').value.trim(); const pw = qs('#loginPass').value; if(uname!==stored.username){ toast('Benutzername unbekannt'); return } const hh = await hashPw(pw); if(hh!==stored.hash){ toast('Falsches Passwort'); return } state.user = stored; state.stay = qs('#optAutoSave')?.checked||false; qs('#logoutBtn').style.display='block'; qs('#userChip').textContent = stored.profile.name || stored.username; qs('#greeting').textContent = 'Willkommen, '+(stored.profile.name || stored.username); qs('#profileName').textContent = stored.profile.name || stored.username; qs('#profileRole').textContent = stored.profile.role || '—'; if(stored.profile.pic) qs('#profilePic').src = stored.profile.pic; toast('Angemeldet'); });
+qs('#logoutBtn').addEventListener('click', ()=>{ state.user = null; qs('#logoutBtn').style.display='none'; qs('#userChip').textContent = 'Nicht angemeldet'; qs('#greeting').textContent = 'Bitte anmelden'; toast('Abgemeldet'); });
+qs('#saveProfile').addEventListener('click', ()=>{ const st = JSON.parse(localStorage.getItem(KEY_USER)||'null'); if(!st){ toast('Kein Benutzer gespeichert'); return } st.profile.name = qs('#editName').value; st.profile.role = qs('#editRole').value; st.profile.company = qs('#editCompany').value; st.profile.email = qs('#editEmail').value; st.profile.pic = qs('#editPic').value; localStorage.setItem(KEY_USER, JSON.stringify(st)); qs('#profileName').textContent = st.profile.name || st.username; toast('Profil gespeichert'); });
+qs('#toggleStay').addEventListener('click', ()=>{ state.stay = !state.stay; qs('#toggleStay').textContent = 'Angemeldet bleiben: '+(state.stay? 'AN':'AUS'); localStorage.setItem('pl_stay', state.stay? '1':''); });
 
-    const favs = JSON.parse(localStorage.getItem("favorites")||"[]");
-    favs.push({keyword, roleTarget, recipient, tone, format, language, details, prompt});
-    localStorage.setItem("favorites", JSON.stringify(favs));
-    loadFavorites();
-  });
+// Theme
+qs('#theme-blue').addEventListener('click', ()=> document.getElementById('app').dataset.theme='light'); qs('#theme-dark').addEventListener('click', ()=> document.getElementById('app').dataset.theme='dark'); qs('#prefTheme').addEventListener('change', e=> document.getElementById('app').dataset.theme = e.target.value==='dark' ? 'dark' : 'light');
 
-  loadFavorites();
+// Utilities
+function escapeHtml(s){ return String(s||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
+
+// Init
+function init(){ renderRecent(); renderHistory(); renderFavorites(); navigate('create'); qsa('.help').forEach(h=>h.title='Hilfe: Mehr Infos'); }
+init();
 
 </script>
 </body>
