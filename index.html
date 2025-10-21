@@ -1,446 +1,407 @@
-<!--
-  PromptLab — Single-file index.html
-  Version: 2.2-final
-  Erstellt für Nutzer: Colin Schmielewski
-  Datum: 2025-10-21
-  Hinweise: Statische Demo. Auth lokal (SHA-256 + localStorage). Nicht für Produktion.
--->
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>PromptLab — Prompt-Generator</title>
-  <style>
-    :root{
-      --bg:#e9f6ff;
-      --panel:#ffffff;
-      --accent:#1e6fb3;
-      --accent-2:#0d4f87;
-      --muted:#6b7280;
-      --danger:#e06a6a;
-      --success:#21a179;
-      --glass: rgba(255,255,255,0.6);
-      --text:#032a3a;
-      --required:#fff0f0;
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LogiPrompt v2.3</title>
+<style>
+    body {
+        margin: 0;
+        font-family: 'Arial', sans-serif;
+        background-color: #f0f8ff;
+        color: #333;
     }
-    [data-theme="dark"]{
-      --bg:#031523;
-      --panel:#071428;
-      --accent:#4aa3ff;
-      --accent-2:#0b63a0;
-      --muted:#9fb6c8;
-      --text:#dceffb;
-      --required:#332b2b;
+    header {
+        background-color: #0077cc;
+        color: white;
+        padding: 1rem;
+        text-align: center;
+        font-size: 1.5rem;
+        font-weight: bold;
     }
-    *{box-sizing:border-box;font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
-    body,html,#app{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#ffffff);color:var(--text)}
-    .app{display:flex;min-height:100vh}
-    .nav{width:260px;padding:18px;background:linear-gradient(180deg,var(--panel),var(--glass));border-right:1px solid rgba(0,0,0,0.06);display:flex;flex-direction:column}
-    .brand{display:flex;gap:10px;align-items:center}
-    .logo{width:46px;height:46px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700}
-    .menu{margin-top:14px;display:flex;flex-direction:column;gap:6px}
-    .menu button{background:none;border:none;padding:10px;border-radius:8px;text-align:left;cursor:pointer}
-    .menu button.active{background:rgba(13,79,135,0.08);font-weight:600}
-    header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid rgba(0,0,0,0.06)}
-    .content{flex:1;padding:18px}
-    .card{background:var(--panel);padding:16px;border-radius:12px;box-shadow:0 6px 18px rgba(13,79,135,0.04)}
-    .grid{display:grid;grid-template-columns:1fr 360px;gap:16px}
-    label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
-    input[type=text],textarea,select{padding:10px;border-radius:8px;border:1px solid rgba(0,0,0,0.08);min-width:200px}
-    textarea{min-height:120px;resize:vertical}
-    .required label::after{content:" *";color:var(--danger)}
-    input[required],select[required],textarea[required]{background:var(--required)}
-    .toolbar{display:flex;gap:8px}
-    .btn{padding:8px 12px;border-radius:8px;border:none;cursor:pointer;background:var(--accent);color:#fff}
-    .btn.ghost{background:transparent;border:1px solid rgba(0,0,0,0.06);color:var(--text)}
-    .btn.red{background:var(--danger)}
-    .list{display:flex;flex-direction:column;gap:8px}
-    .prompt-item{padding:10px;border-radius:8px;border:1px solid rgba(0,0,0,0.04);display:flex;justify-content:space-between;align-items:flex-start}
-    .meta{font-size:12px;color:var(--muted)}
-    .truck-wrap{height:80px;overflow:hidden;position:relative}
-    .truck{width:80px;height:40px;border-radius:8px;position:absolute;left:-120px;top:20px;display:flex;align-items:center;justify-content:center;color:#fff;background:linear-gradient(90deg,var(--accent),var(--accent-2))}
-    .truck.generate{animation:drive 1.6s linear forwards}
-    @keyframes drive{from{left:-120px}to{left:110%}}
-    .toast{position:fixed;right:20px;bottom:20px;padding:10px 14px;border-radius:8px;background:var(--panel);box-shadow:0 8px 30px rgba(0,0,0,0.12)}
-    .avatar{width:84px;height:84px;border-radius:12px;object-fit:cover;border:3px solid var(--glass)}
-    .chip{padding:6px 8px;border-radius:999px;background:rgba(0,0,0,0.04);font-size:12px}
-    @media(max-width:900px){.nav{position:fixed;left:-300px;z-index:10}.nav.open{left:0}.grid{grid-template-columns:1fr}}
-  </style>
+    #container {
+        display: flex;
+        min-height: 90vh;
+    }
+    nav {
+        width: 220px;
+        background-color: #e6f2ff;
+        padding: 1rem;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    }
+    nav ul {
+        list-style: none;
+        padding: 0;
+    }
+    nav li {
+        padding: 0.8rem;
+        margin-bottom: 0.5rem;
+        background-color: #d0e7ff;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+    nav li:hover {
+        background-color: #a6d1ff;
+    }
+    main {
+        flex: 1;
+        padding: 2rem;
+    }
+    .hidden {
+        display: none;
+    }
+    input, select, textarea, button {
+        display: block;
+        margin-bottom: 1rem;
+        padding: 0.5rem;
+        width: 100%;
+        font-size: 1rem;
+    }
+    button {
+        background-color: #0077cc;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    button:hover {
+        background-color: #005fa3;
+    }
+    .tooltip {
+        display: inline-block;
+        position: relative;
+        cursor: pointer;
+        color: #0077cc;
+        font-weight: bold;
+    }
+    .tooltip .tooltiptext {
+        visibility: hidden;
+        width: 200px;
+        background-color: #0077cc;
+        color: #fff;
+        text-align: center;
+        border-radius: 5px;
+        padding: 0.5rem;
+        position: absolute;
+        z-index: 1;
+        bottom: 125%;
+        left: 50%;
+        margin-left: -100px;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+    .tooltip:hover .tooltiptext {
+        visibility: visible;
+        opacity: 1;
+    }
+    #promptOutput {
+        background-color: #f5f5f5;
+        padding: 1rem;
+        border-radius: 5px;
+        margin-top: 1rem;
+        min-height: 80px;
+        white-space: pre-wrap;
+    }
+    #rating {
+        display: flex;
+        margin-top: 1rem;
+        gap: 5px;
+    }
+    .box {
+        width: 30px;
+        height: 30px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        background-color: #eee;
+    }
+    .active {
+        background-color: #00cc44;
+    }
+    .status {
+        margin-top: 1rem;
+        color: #0077cc;
+        font-weight: bold;
+    }
+    #truckAnimation {
+        width: 50px;
+        height: 50px;
+        margin: 1rem 0;
+        transition: transform 2s ease-in-out;
+    }
+</style>
 </head>
 <body>
-<div id="app" class="app" data-theme="light">
-  <aside class="nav card">
-    <div class="brand">
-      <div class="logo">PL</div>
-      <div>
-        <div style="font-weight:700">PromptLab</div>
-        <div style="font-size:12px;color:var(--muted)">Deine KI-Prompt Werkstatt</div>
-      </div>
-    </div>
-    <div id="greeting" style="margin-top:10px;color:var(--muted)">Bitte anmelden</div>
-    <nav class="menu" aria-label="Main menu">
-      <button data-route="create" class="active">Prompt erstellen</button>
-      <button data-route="favorites">Favoriten</button>
-      <button data-route="history">Verlauf</button>
-      <button data-route="profile">Profil</button>
-      <div style="height:1px;background:linear-gradient(90deg,transparent,var(--accent));margin:8px 0;border-radius:4px"></div>
-      <button id="logoutBtn" style="margin-top:8px;display:none">Abmelden</button>
+<header>LogiPrompt v2.3</header>
+<div id="container">
+    <nav>
+        <ul>
+            <li onclick="showPage('profile')">Profil</li>
+            <li onclick="showPage('prompt')">Prompt Erstellung</li>
+            <li onclick="showPage('favorites')">Favoriten</li>
+        </ul>
     </nav>
-    <div style="margin-top:auto;font-size:12px;color:var(--muted)">
-      <div>Theme</div>
-      <div style="display:flex;gap:6px;margin-top:6px">
-        <button class="chip" id="theme-blue">Hellblau</button>
-        <button class="chip" id="theme-dark">Dunkelmodus</button>
-      </div>
-    </div>
-  </aside>
-
-  <main class="content">
-    <header>
-      <div class="toolbar">
-        <button id="mobileNavToggle" class="btn ghost">☰</button>
-        <div id="statusBar" style="font-size:13px;color:var(--muted);margin-left:8px">Bereit</div>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <div id="userChip" style="font-size:13px;color:var(--muted)">Nicht angemeldet</div>
-      </div>
-    </header>
-
-    <section id="view" style="margin-top:14px">
-      <!-- CREATE PAGE -->
-      <div data-page="create">
-        <div class="grid">
-          <div>
-            <div class="card">
-              <h3>Prompt erstellen</h3>
-
-              <!-- Fields exactly as requested -->
-              <div class="form-group required">
-                <label for="keyword">Schlüsselwort / Thema</label>
-                <input id="keyword" placeholder="z. B. nachhaltiges Produkt, Bewerbung" required title="Das zentrale Stichwort oder Thema" />
-                <div class="hint">Wichtig: Kernthema für den Prompt.</div>
-              </div>
-
-              <div class="form-row" style="display:flex;gap:12px;margin-bottom:12px">
-                <div style="flex:1" class="form-group">
-                  <label for="role">Adressat / Rolle</label>
-                  <input id="role" placeholder="z. B. Marketing-Manager, Lehrer" title="Für welche Rolle / Position ist der Text gedacht?" />
-                </div>
-                <div style="width:220px" class="form-group">
-                  <label for="recipient">Empfänger / Name</label>
-                  <input id="recipient" placeholder="z. B. Anna, Kunden" title="Name des Empfängers (optional)" />
-                </div>
-              </div>
-
-              <div class="form-row" style="display:flex;gap:12px;margin-bottom:12px">
-                <div style="flex:1" class="form-group required">
-                  <label for="tone">Tonfall</label>
-                  <select id="tone" required title="Wähle den gewünschten Tonfall">
-                    <option>Neutral</option>
-                    <option>Freundlich</option>
-                    <option>Formell</option>
-                    <option>Witzig</option>
-                    <option>Ernst</option>
-                    <option>Überzeugend</option>
-                    <option>Kreativ</option>
-                    <option>Sarkastisch</option>
-                    <option>Poetisch</option>
-                    <option>Technisch</option>
-                  </select>
-                </div>
-                <div style="width:220px" class="form-group required">
-                  <label for="format">Textformat</label>
-                  <select id="format" required title="z. B. E-Mail, Blogpost, Produktbeschreibung">
-                    <option>E-Mail</option>
-                    <option>Blogpost</option>
-                    <option>Produktbeschreibung</option>
-                    <option>Social-Media-Post</option>
-                    <option>Formeller Brief</option>
-                    <option>Liste / Stichpunkte</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="form-row" style="display:flex;gap:12px;margin-bottom:12px">
-                <div style="flex:1" class="form-group required">
-                  <label for="lang">Sprache</label>
-                  <select id="lang" required title="Wähle die Sprache">
-                    <option>Deutsch</option>
-                    <option>Englisch</option>
-                    <option>Mehrsprachig</option>
-                  </select>
-                </div>
-                <div style="width:140px" class="form-group">
-                  <label for="length">Länge</label>
-                  <select id="length" title="Erwartete Länge">
-                    <option>Kurz</option>
-                    <option>Mittel</option>
-                    <option>Lang</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label for="details">Zusätzliche Details</label>
-                <textarea id="details" placeholder="Weitere Hinweise, Tonvorgaben, Stichpunkte..." title="Optionale Zusatzinfos"></textarea>
-              </div>
-
-              <!-- readonly generated prompt -->
-              <div class="form-group required" style="margin-top:8px">
-                <label for="generated">Generierter Prompt</label>
-                <textarea id="generated" readonly required title="Der automatisch erzeugte Prompt erscheint hier"></textarea>
-                <div class="hint">Der Prompt wird beim Klick auf «Prompt generieren» automatisch erstellt (Lückentext).</div>
-              </div>
-
-              <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
-                <button id="generateBtn" class="btn">Prompt generieren</button>
-                <button id="saveBtn" class="btn ghost">Speichern</button>
-                <button id="favBtn" class="btn ghost">❤ Favorit</button>
-                <button id="resetBtn" class="btn ghost">Zurücksetzen</button>
-              </div>
-
-              <div style="margin-top:10px" class="truck-wrap"><div id="truck" class="truck">🚚</div></div>
-
-              <div style="margin-top:12px;font-size:13px;color:var(--muted)">Ausgabe</div>
-              <div id="outputBox" class="card" style="min-height:100px;margin-top:8px;display:flex;justify-content:space-between;align-items:flex-start">
-                <div id="outputText" style="white-space:pre-wrap;flex:1;padding-right:12px"></div>
-                <div style="display:flex;flex-direction:column;gap:8px">
-                  <button id="copyBtn" class="btn ghost">Kopieren</button>
-                  <button id="downloadBtn" class="btn ghost">Als .txt</button>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-          <aside>
-            <div class="card">
-              <h4>Hilfe & Aktionen</h4>
-              <div style="font-size:13px;color:var(--muted)">Tooltips: Fahre über ein Feld oder tippe auf das Feld, um Hilfetexte zu sehen.</div>
-              <hr />
-              <div style="margin-top:8px">
-                <div style="font-weight:600">Schnellaktionen</div>
-                <div style="display:flex;gap:8px;margin-top:8px">
-                  <button id="copyGenerated" class="btn ghost">Prompt kopieren</button>
-                  <button id="previewBtn" class="btn ghost">Vorschau</button>
-                </div>
-              </div>
-            </div>
-
-            <div class="card" style="margin-top:12px">
-              <h4>Letzte Prompts</h4>
-              <div id="recentList" class="list"></div>
-            </div>
-          </aside>
+    <main>
+        <!-- Anmelde-/Registrierungsseite -->
+        <div id="loginPage">
+            <h2>Anmeldung / Registrierung</h2>
+            <input type="text" id="name" placeholder="Name">
+            <input type="text" id="role" placeholder="Rolle in der Firma">
+            <input type="text" id="company" placeholder="Firmenname">
+            <input type="password" id="password" placeholder="Passwort">
+            <label><input type="checkbox" id="stayLoggedIn"> Angemeldet bleiben</label>
+            <button onclick="login()">Anmelden</button>
         </div>
-      </div>
 
-      <!-- FAVORITES -->
-      <div data-page="favorites" style="display:none">
-        <div class="card">
-          <h3>Favoriten</h3>
-          <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
-            <input id="favFilter" placeholder="Favoriten durchsuchen" />
-            <select id="favSort"><option value="new">Neueste zuerst</option><option value="old">Älteste zuerst</option></select>
-            <button id="clearFavFilter" class="btn ghost">Filter löschen</button>
-          </div>
-          <div id="favList" class="list"></div>
+        <!-- Profilseite -->
+        <div id="profilePage" class="hidden">
+            <h2>Profil</h2>
+            <input type="text" id="profileName" placeholder="Name">
+            <input type="text" id="profileRole" placeholder="Rolle in der Firma">
+            <input type="text" id="profileCompany" placeholder="Firmenname">
+            <input type="file" id="profilePic">
+            <button onclick="saveProfile()">Profil speichern</button>
+            <div class="status" id="profileStatus"></div>
         </div>
-      </div>
 
-      <!-- HISTORY -->
-      <div data-page="history" style="display:none">
-        <div class="card">
-          <h3>Verlauf</h3>
-          <div id="historyList" class="list"></div>
+        <!-- Prompt-Erstellung -->
+        <div id="promptPage" class="hidden">
+            <h2>Prompt Erstellung</h2>
+
+            <label class="tooltip">i
+                <span class="tooltiptext">Gib das Thema des Prompts ein (z.B. Ermahnung)</span>
+            </label>
+            <input type="text" id="keyword" placeholder="Thema / Schlüsselwort" required>
+
+            <label class="tooltip">i
+                <span class="tooltiptext">Rolle des Adressaten auswählen</span>
+            </label>
+            <select id="recipientRole">
+                <option value="Fahrerpersonal">Fahrerpersonal</option>
+                <option value="Logistikleitung">Logistikleitung</option>
+                <option value="Disponent">Disponent</option>
+            </select>
+
+            <label class="tooltip">i
+                <span class="tooltiptext">Name des Empfängers</span>
+            </label>
+            <input type="text" id="recipientName" placeholder="Empfänger Name">
+
+            <label class="tooltip">i
+                <span class="tooltiptext">Tonfall auswählen</span>
+            </label>
+            <select id="tone">
+                <option value="ernst">Ernst</option>
+                <option value="lösungsorientiert">Lösungsorientiert</option>
+                <option value="freundlich">Freundlich</option>
+            </select>
+
+            <label class="tooltip">i
+                <span class="tooltiptext">Textformat auswählen</span>
+            </label>
+            <select id="textFormat">
+                <option value="Email">Email</option>
+                <option value="Brief">Brief</option>
+                <option value="Memo">Memo</option>
+            </select>
+
+            <label class="tooltip">i
+                <span class="tooltiptext">Sprache auswählen</span>
+            </label>
+            <select id="language">
+                <option value="Deutsch">Deutsch</option>
+                <option value="Englisch">Englisch</option>
+                <option value="Französisch">Französisch</option>
+            </select>
+
+            <button onclick="generatePrompt()">Prompt generieren</button>
+            <button onclick="resetFields()">Zurücksetzen</button>
+
+            <img id="truckAnimation" src="https://cdn-icons-png.flaticon.com/512/616/616408.png" style="transform: translateX(0);">
+
+            <div id="promptOutput"></div>
+            <button onclick="copyPrompt()">Prompt kopieren</button>
+            <button onclick="saveFavorite()">Zu Favoriten hinzufügen</button>
+            <div class="status" id="promptStatus"></div>
+
+            <div id="rating">
+                <div class="box" id="box1"></div>
+                <div class="box" id="box2"></div>
+                <div class="box" id="box3"></div>
+                <div class="box" id="box4"></div>
+                <div class="box" id="box5"></div>
+            </div>
         </div>
-      </div>
 
-      <!-- PROFILE -->
-      <div data-page="profile" style="display:none">
-        <div class="grid">
-          <div>
-            <div class="card">
-              <h3>Profil</h3>
-              <div style="display:flex;gap:12px;align-items:center">
-                <img id="profilePic" src="https://via.placeholder.com/84" alt="Avatar" class="avatar" />
-                <div>
-                  <div id="profileName" style="font-weight:700">Nicht angemeldet</div>
-                  <div id="profileRole" style="font-size:13px;color:var(--muted)">—</div>
-                </div>
-              </div>
-
-              <hr />
-              <div class="form-group">
-                <label for="editName">Name</label>
-                <input id="editName" placeholder="Vorname Nachname" />
-              </div>
-              <div class="form-group">
-                <label for="editRole">Rolle</label>
-                <input id="editRole" placeholder="z. B. Autor, Entwickler" />
-              </div>
-              <div class="form-group">
-                <label for="editCompany">Firma</label>
-                <input id="editCompany" placeholder="Firma (optional)" />
-              </div>
-              <div class="form-group">
-                <label for="editEmail">E-Mail (optional)</label>
-                <input id="editEmail" placeholder="email@beispiel.de" />
-              </div>
-              <div class="form-group">
-                <label for="editPic">Profilbild URL</label>
-                <input id="editPic" placeholder="https://..." />
-              </div>
-
-              <div style="display:flex;gap:8px;margin-top:8px">
-                <button id="saveProfile" class="btn">Profil speichern</button>
-                <button id="toggleStay" class="btn ghost">Angemeldet bleiben: AUS</button>
-              </div>
-
-              <hr />
-
-              <h4>Sicherheit</h4>
-              <div class="form-group required">
-                <label for="loginName">Benutzername</label>
-                <input id="loginName" required placeholder="Benutzername" />
-              </div>
-              <div class="form-group required">
-                <label for="loginPass">Passwort</label>
-                <input id="loginPass" type="password" required placeholder="Passwort" />
-              </div>
-              <div style="display:flex;gap:8px;margin-top:8px">
-                <button id="createUser" class="btn">Benutzer erstellen/aktualisieren</button>
-                <button id="loginBtn" class="btn ghost">Anmelden</button>
-              </div>
-
-              <div style="margin-top:10px;font-size:12px;color:var(--muted)">Hinweis: Demo speichert verschlüsselt lokal (localStorage). Produktionssystem benötigt Backend.</div>
-            </div>
-          </div>
-
-          <aside>
-            <div class="card">
-              <h4>Einstellungen</h4>
-              <div class="form-group">
-                <label for="prefTheme">Theme</label>
-                <select id="prefTheme"><option value="light">Hell</option><option value="dark">Dunkel</option></select>
-              </div>
-              <div class="form-group">
-                <label>Account Optionen</label>
-                <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
-                  <label><input type="checkbox" id="optAutoSave"> Automatisch speichern</label>
-                  <label><input type="checkbox" id="optConfirmDelete"> Löscheinträge bestätigen</label>
-                </div>
-              </div>
-            </div>
-
-            <div class="card" style="margin-top:12px">
-              <h4>Über</h4>
-              <div style="font-size:13px;color:var(--muted)">Version: 2.2-final — lokale Demo</div>
-            </div>
-          </aside>
+        <!-- Favoriten -->
+        <div id="favoritesPage" class="hidden">
+            <h2>Favoriten</h2>
+            <div id="favoritesList"></div>
         </div>
-      </div>
-
-    </section>
-  </main>
+    </main>
 </div>
 
-<!-- toast container -->
-<div id="toastRoot"></div>
-
 <script>
-// Helper selectors
-const qs = s => document.querySelector(s);
-const qsa = s => Array.from(document.querySelectorAll(s));
+let currentUser = null;
 
-// Router
-qsa('.menu button').forEach(b=>b.addEventListener('click', ()=> navigate(b.dataset.route)));
-function navigate(route){ qsa('[data-page]').forEach(p=>p.style.display='none'); const el = document.querySelector(`[data-page="${route}"]`); if(el) el.style.display='block'; qsa('.menu button').forEach(b=>b.classList.toggle('active', b.dataset.route===route)); }
+// Navigation
+function showPage(page) {
+    document.getElementById('loginPage').classList.add('hidden');
+    document.getElementById('profilePage').classList.add('hidden');
+    document.getElementById('promptPage').classList.add('hidden');
+    document.getElementById('favoritesPage').classList.add('hidden');
+    if(page === 'profile') document.getElementById('profilePage').classList.remove('hidden');
+    if(page === 'prompt') document.getElementById('promptPage').classList.remove('hidden');
+    if(page === 'favorites') {
+        document.getElementById('favoritesPage').classList.remove('hidden');
+        renderFavorites();
+    }
+}
 
-// State & storage keys
-let state = { user: null, stay: false };
-const KEY_USER = 'pl_user_v2';
-const KEY_PROMPTS = 'pl_prompts_v2';
+// Login / Registrierung
+function login() {
+    const name = document.getElementById('name').value;
+    const role = document.getElementById('role').value;
+    const company = document.getElementById('company').value;
+    const password = document.getElementById('password').value;
 
-// Toasts
-function toast(msg, t=3000){ const root = qs('#toastRoot'); const d = document.createElement('div'); d.className='toast card'; d.textContent=msg; root.appendChild(d); setTimeout(()=>d.remove(), t); }
+    if(!name || !role || !company || !password) {
+        alert("Bitte alle Felder ausfüllen!");
+        return;
+    }
 
-// Prompts storage
-function loadPrompts(){ try{ return JSON.parse(localStorage.getItem(KEY_PROMPTS)||'[]') } catch(e){ return [] }}
-function savePrompts(arr){ localStorage.setItem(KEY_PROMPTS, JSON.stringify(arr)); }
-function uid(){ return 'id_'+Math.random().toString(36).slice(2,12) }
+    currentUser = {name, role, company, password};
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    if(document.getElementById('stayLoggedIn').checked) {
+        localStorage.setItem('stayLoggedIn', 'true');
+    } else {
+        localStorage.removeItem('stayLoggedIn');
+    }
 
-// Render recent
-function renderRecent(){ const el = qs('#recentList'); el.innerHTML=''; const items = loadPrompts().slice(-6).reverse(); items.forEach(p=>{ const d=document.createElement('div'); d.className='prompt-item'; d.innerHTML = `<div><strong>${escapeHtml(p.title)}</strong><div class="meta">${new Date(p.created).toLocaleString()}</div></div><div style="display:flex;flex-direction:column;gap:6px"><button class="btn ghost" data-id="${p.id}" data-action="open">Öffnen</button></div>`; el.appendChild(d); }); }
+    // Profil Felder befüllen
+    document.getElementById('profileName').value = name;
+    document.getElementById('profileRole').value = role;
+    document.getElementById('profileCompany').value = company;
 
-// Open prompt by id (populate form)
-function openPromptById(id){ const p = loadPrompts().find(x=>x.id===id); if(!p) return; navigate('create'); qs('#keyword').value = p.keyword||''; qs('#role').value = p.role||''; qs('#recipient').value = p.recipient||''; qs('#tone').value = p.tone||'Neutral'; qs('#format').value = p.format||'E-Mail'; qs('#lang').value = p.lang||'Deutsch'; qs('#details').value = p.details||''; qs('#generated').value = p.text||''; qs('#outputText').textContent = p.text||''; qs('#keyword').focus(); toast('Prompt geladen'); }
+    showPage('prompt');
+}
 
-// Build Lückentext prompt using exact fields (German template similar to original)
-function buildPrompt(){ const keyword = qs('#keyword').value.trim(); const role = qs('#role').value.trim(); const recipient = qs('#recipient').value.trim(); const tone = qs('#tone').value; const format = qs('#format').value; const lang = qs('#lang').value; const length = qs('#length').value; const details = qs('#details').value.trim(); if(!keyword){ toast('Bitte "Schlüsselwort / Thema" ausfüllen'); return null; } // Template
-  let p = `Aufgabe: Erstelle einen ${format} zum Thema "${keyword}".`;
-  if(role) p += ` Der Text richtet sich an ${role}.`;
-  if(recipient) p += ` Empfänger: ${recipient}.`;
-  p += `\nTon: ${tone}. Sprache: ${lang}. Erwartete Länge: ${length}.`;
-  if(details) p += `\nZusätzliche Details: ${details}.`;
-  p += `\n\nBitte liefere eine klare, strukturierte und gut lesbare Version, die sofort verwendet werden kann.`;
-  return p; }
+// Profil speichern
+function saveProfile() {
+    currentUser.name = document.getElementById('profileName').value;
+    currentUser.role = document.getElementById('profileRole').value;
+    currentUser.company = document.getElementById('profileCompany').value;
 
-// Generate
-function generate(){ const prompt = buildPrompt(); if(!prompt) return; const truck = qs('#truck'); truck.classList.remove('generate'); void truck.offsetWidth; truck.classList.add('generate'); qs('#statusBar').textContent='Generiere...'; setTimeout(()=>{ qs('#generated').value = prompt; qs('#outputText').textContent = prompt; addPromptToStorage({ title: qs('#keyword').value.trim(), keyword: qs('#keyword').value.trim(), role: qs('#role').value.trim(), recipient: qs('#recipient').value.trim(), tone: qs('#tone').value, format: qs('#format').value, lang: qs('#lang').value, length: qs('#length').value, details: qs('#details').value.trim(), text: prompt, created: Date.now() }); qs('#statusBar').textContent='Bereit'; toast('Prompt generiert'); },900); }
+    const picFile = document.getElementById('profilePic').files[0];
+    if(picFile) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            currentUser.profilePic = e.target.result;
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            document.getElementById('profileStatus').innerText = "Profil gespeichert!";
+        };
+        reader.readAsDataURL(picFile);
+    } else {
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        document.getElementById('profileStatus').innerText = "Profil gespeichert!";
+    }
+}
 
-function addPromptToStorage(item){ const arr = loadPrompts(); arr.push({ id: uid(), ...item }); savePrompts(arr); renderRecent(); renderHistory(); renderFavorites(); }
+// Prompt generieren
+function generatePrompt() {
+    const keyword = document.getElementById('keyword').value;
+    const recipientRole = document.getElementById('recipientRole').value;
+    const recipientName = document.getElementById('recipientName').value;
+    const tone = document.getElementById('tone').value;
+    const textFormat = document.getElementById('textFormat').value;
+    const language = document.getElementById('language').value;
 
-function saveCurrent(asFavorite=false){ const text = qs('#generated').value.trim(); const title = qs('#keyword').value.trim() || ('Prompt '+new Date().toLocaleString()); if(!text){ toast('Kein Prompt zum Speichern.'); return } const arr = loadPrompts(); arr.push({ id: uid(), title, keyword: qs('#keyword').value, role: qs('#role').value, recipient: qs('#recipient').value, tone: qs('#tone').value, format: qs('#format').value, lang: qs('#lang').value, length: qs('#length').value, details: qs('#details').value, text, favorite: !!asFavorite, created: Date.now() }); savePrompts(arr); renderRecent(); renderHistory(); renderFavorites(); toast('Prompt gespeichert'); }
+    if(!keyword) { alert("Thema ist Pflichtfeld!"); return; }
 
-// Favorites
-function renderFavorites(filter='', sort='new'){ let list = loadPrompts().filter(x=>x.favorite); if(filter) list = list.filter(p=>p.title.toLowerCase().includes(filter.toLowerCase())||p.text.toLowerCase().includes(filter.toLowerCase())); list.sort((a,b)=> sort==='new' ? b.created-a.created : a.created-b.created); const el = qs('#favList'); el.innerHTML=''; if(list.length===0){ el.innerHTML='<div style="color:var(--muted)">Keine Favoriten gefunden.</div>'; return } list.forEach(p=>{ const d=document.createElement('div'); d.className='prompt-item'; d.innerHTML = `<div style="flex:1"><strong>${escapeHtml(p.title)}</strong><div class="meta">${new Date(p.created).toLocaleString()}</div><div class="small">${escapeHtml(p.text.slice(0,160))}${p.text.length>160?'...':''}</div></div><div style="display:flex;flex-direction:column;gap:6px"><button class="btn" data-id="${p.id}" data-action="open">Öffnen</button><button class="btn ghost" data-id="${p.id}" data-action="copy">Kopieren</button><button class="btn red" data-id="${p.id}" data-action="del">Löschen</button></div>`; el.appendChild(d); }); }
+    // LKW Animation
+    const truck = document.getElementById('truckAnimation');
+    truck.style.transform = "translateX(400px)";
+    setTimeout(() => truck.style.transform = "translateX(0px)", 2000);
 
-// History
-function renderHistory(){ const el = qs('#historyList'); el.innerHTML=''; const list = loadPrompts().slice().reverse(); list.forEach(p=>{ const d=document.createElement('div'); d.className='prompt-item'; d.innerHTML = `<div style="flex:1"><strong>${escapeHtml(p.title)}</strong><div class="meta">${new Date(p.created).toLocaleString()}</div></div><div style="display:flex;flex-direction:column;gap:6px"><button class="btn ghost" data-id="${p.id}" data-action="open">Laden</button><button class="btn" data-id="${p.id}" data-action="fav">❤</button></div>`; el.appendChild(d); }); }
+    const prompt = `Von: ${currentUser.name}, ${currentUser.role}, ${currentUser.company}\nAn: ${recipientName} (${recipientRole})\nTonfall: ${tone}\nFormat: ${textFormat}\nSprache: ${language}\nThema: ${keyword}\n\nBitte ChatGPT verwenden, um folgenden Text zu erstellen.`;
 
-// Copy & Download
-async function copyText(t){ try{ await navigator.clipboard.writeText(t); toast('In die Zwischenablage kopiert'); } catch(e){ toast('Kopieren fehlgeschlagen'); } }
-qs('#copyBtn').addEventListener('click', ()=> copyText(qs('#generated').value || qs('#outputText').textContent)); qs('#copyGenerated').addEventListener('click', ()=> copyText(qs('#generated').value || qs('#outputText').textContent)); qs('#copyForm').?.addEventListener?.('click',()=>{}); // safe noop
-qs('#downloadBtn').addEventListener('click', ()=>{ const data = qs('#generated').value || qs('#outputText').textContent; const blob = new Blob([data],{type:'text/plain'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href=url; a.download='prompt.txt'; a.click(); URL.revokeObjectURL(url); toast('Download gestartet'); });
+    document.getElementById('promptOutput').innerText = prompt;
+    document.getElementById('promptStatus').innerText = "Prompt generiert!";
 
-// Dynamic button actions (open, copy, del, fav)
-document.addEventListener('click', (e)=>{
-  const btn = e.target.closest('button[data-id]'); if(!btn) return; const id = btn.dataset.id; const act = btn.dataset.action;
-  if(act==='open') openPromptById(id);
-  else if(act==='copy'){ const p = loadPrompts().find(x=>x.id===id); if(p) copyText(p.text); }
-  else if(act==='del'){ if(qs('#optConfirmDelete')?.checked){ if(!confirm('Eintrag wirklich löschen?')) return } const rest = loadPrompts().filter(x=>x.id!==id); savePrompts(rest); renderFavorites(qs('#favFilter').value, qs('#favSort').value); renderHistory(); renderRecent(); toast('Eintrag gelöscht'); }
-  else if(act==='fav'){ const arr = loadPrompts(); const p = arr.find(x=>x.id===id); if(p){ p.favorite = !p.favorite; savePrompts(arr); renderFavorites(); renderHistory(); toast(p.favorite? 'Favorit hinzugefügt':'Favorit entfernt'); } }
-});
+    // Bewertung berechnen
+    let filled = 0;
+    [keyword, recipientRole, recipientName, tone, textFormat, language].forEach(f => { if(f) filled++; });
+    for(let i=1;i<=5;i++){
+        document.getElementById('box'+i).classList.remove('active');
+        if(i <= Math.min(filled,5)) document.getElementById('box'+i).classList.add('active');
+    }
+}
 
-// Save / Fav / Generate / Reset bindings
-qs('#generateBtn').addEventListener('click', generate);
-qs('#saveBtn').addEventListener('click', ()=> saveCurrent(false));
-qs('#favBtn').addEventListener('click', ()=> saveCurrent(true));
-qs('#resetBtn').addEventListener('click', ()=>{ qs('#keyword').value=''; qs('#role').value=''; qs('#recipient').value=''; qs('#tone').value='Neutral'; qs('#format').value='E-Mail'; qs('#lang').value='Deutsch'; qs('#length').value='Mittel'; qs('#details').value=''; qs('#generated').value=''; qs('#outputText').textContent=''; toast('Formular zurückgesetzt'); });
+// Felder zurücksetzen
+function resetFields() {
+    document.getElementById('keyword').value = '';
+    document.getElementById('recipientRole').selectedIndex = 0;
+    document.getElementById('recipientName').value = '';
+    document.getElementById('tone').selectedIndex = 0;
+    document.getElementById('textFormat').selectedIndex = 0;
+    document.getElementById('language').selectedIndex = 0;
+    document.getElementById('promptOutput').innerText = '';
+    document.getElementById('promptStatus').innerText = '';
+    for(let i=1;i<=5;i++) document.getElementById('box'+i).classList.remove('active');
+}
 
-// favorites controls
-qs('#favFilter').addEventListener('input', e=> renderFavorites(e.target.value, qs('#favSort').value)); qs('#favSort').addEventListener('change', e=> renderFavorites(qs('#favFilter').value, e.target.value)); qs('#clearFavFilter').addEventListener('click', ()=>{ qs('#favFilter').value=''; renderFavorites(); });
+// Prompt kopieren
+function copyPrompt() {
+    const text = document.getElementById('promptOutput').innerText;
+    navigator.clipboard.writeText(text).then(()=> {
+        document.getElementById('promptStatus').innerText = "Prompt kopiert!";
+    });
+}
 
-// User: hash + local user storage
-async function hashPw(pw){ const enc = new TextEncoder().encode(pw); const h = await crypto.subtle.digest('SHA-256', enc); return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,'0')).join(''); }
-qs('#createUser').addEventListener('click', async ()=>{ const uname = qs('#loginName').value.trim(); const pw = qs('#loginPass').value; if(!uname||!pw){ toast('Benutzername & Passwort erforderlich'); return } const hh = await hashPw(pw); const user = { username: uname, hash: hh, profile: { name: qs('#editName').value, role: qs('#editRole').value, company: qs('#editCompany').value, email: qs('#editEmail').value, pic: qs('#editPic').value } }; localStorage.setItem(KEY_USER, JSON.stringify(user)); toast('Benutzer erstellt (lokal)'); });
-qs('#loginBtn').addEventListener('click', async ()=>{ const stored = JSON.parse(localStorage.getItem(KEY_USER)||'null'); if(!stored){ toast('Kein Benutzer vorhanden'); return } const uname = qs('#loginName').value.trim(); const pw = qs('#loginPass').value; if(uname!==stored.username){ toast('Benutzername unbekannt'); return } const hh = await hashPw(pw); if(hh!==stored.hash){ toast('Falsches Passwort'); return } state.user = stored; state.stay = qs('#optAutoSave')?.checked||false; qs('#logoutBtn').style.display='block'; qs('#userChip').textContent = stored.profile.name || stored.username; qs('#greeting').textContent = 'Willkommen, '+(stored.profile.name || stored.username); qs('#profileName').textContent = stored.profile.name || stored.username; qs('#profileRole').textContent = stored.profile.role || '—'; if(stored.profile.pic) qs('#profilePic').src = stored.profile.pic; toast('Angemeldet'); });
-qs('#logoutBtn').addEventListener('click', ()=>{ state.user = null; qs('#logoutBtn').style.display='none'; qs('#userChip').textContent = 'Nicht angemeldet'; qs('#greeting').textContent = 'Bitte anmelden'; toast('Abgemeldet'); });
-qs('#saveProfile').addEventListener('click', ()=>{ const st = JSON.parse(localStorage.getItem(KEY_USER)||'null'); if(!st){ toast('Kein Benutzer gespeichert'); return } st.profile.name = qs('#editName').value; st.profile.role = qs('#editRole').value; st.profile.company = qs('#editCompany').value; st.profile.email = qs('#editEmail').value; st.profile.pic = qs('#editPic').value; localStorage.setItem(KEY_USER, JSON.stringify(st)); qs('#profileName').textContent = st.profile.name || st.username; toast('Profil gespeichert'); });
-qs('#toggleStay').addEventListener('click', ()=>{ state.stay = !state.stay; qs('#toggleStay').textContent = 'Angemeldet bleiben: '+(state.stay? 'AN':'AUS'); localStorage.setItem('pl_stay', state.stay? '1':''); });
+// Favoriten speichern
+function saveFavorite() {
+    const promptText = document.getElementById('promptOutput').innerText;
+    if(!promptText) return;
+    let favorites = JSON.parse(localStorage.getItem('favorites') || "[]");
+    favorites.push({prompt: promptText, date: new Date().toISOString()});
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+    document.getElementById('promptStatus').innerText = "Favorit hinzugefügt!";
+}
 
-// Theme
-qs('#theme-blue').addEventListener('click', ()=> document.getElementById('app').dataset.theme='light'); qs('#theme-dark').addEventListener('click', ()=> document.getElementById('app').dataset.theme='dark'); qs('#prefTheme').addEventListener('change', e=> document.getElementById('app').dataset.theme = e.target.value==='dark' ? 'dark' : 'light');
+// Favoriten anzeigen
+function renderFavorites() {
+    const favorites = JSON.parse(localStorage.getItem('favorites') || "[]");
+    const container = document.getElementById('favoritesList');
+    container.innerHTML = '';
+    favorites.slice().reverse().forEach((f,i)=>{
+        const div = document.createElement('div');
+        div.style.border = '1px solid #ccc';
+        div.style.padding = '0.5rem';
+        div.style.marginBottom = '0.5rem';
+        div.innerHTML = `<pre>${f.prompt}</pre>
+        <button onclick="removeFavorite(${favorites.length - 1 - i})">Entfernen</button>`;
+        container.appendChild(div);
+    });
+}
 
-// Utilities
-function escapeHtml(s){ return String(s||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
+// Favorit entfernen
+function removeFavorite(index) {
+    let favorites = JSON.parse(localStorage.getItem('favorites') || "[]");
+    favorites.splice(index,1);
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+    renderFavorites();
+}
 
-// Init
-function init(){ renderRecent(); renderHistory(); renderFavorites(); navigate('create'); qsa('.help').forEach(h=>h.title='Hilfe: Mehr Infos'); }
-init();
-
+// Automatisch eingeloggt bleiben
+window.onload = function() {
+    if(localStorage.getItem('stayLoggedIn') && localStorage.getItem('currentUser')) {
+        currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        document.getElementById('profileName').value = currentUser.name;
+        document.getElementById('profileRole').value = currentUser.role;
+        document.getElementById('profileCompany').value = currentUser.company;
+        showPage('prompt');
+    }
+};
 </script>
 </body>
 </html>
