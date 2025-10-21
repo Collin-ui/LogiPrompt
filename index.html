@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LogiPrompt 3.0 Grundbaustein</title>
+<style>
+body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f0f4f8; color:#333; }
+.container { max-width: 650px; margin: 50px auto; padding: 25px; background:#fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+h1,h2 { text-align:center; color:#004080; }
+label { display:block; margin-top:12px; font-weight:600; }
+input, select, textarea, button { width:100%; padding:10px; margin-top:6px; border-radius:8px; border:1px solid #ccc; font-size:1rem; }
+textarea { resize: vertical; min-height:60px; }
+button { background:#008cff; color:white; border:none; cursor:pointer; margin-top:15px; font-weight:600; transition:0.2s; }
+button:hover { background:#005bb5; }
+#promptResult { background:#e6f0ff; padding:12px; border-radius:8px; margin-top:15px; white-space: pre-wrap; min-height:50px; }
+#promptRating { margin-top:15px; display:flex; gap:5px; justify-content:center; }
+#promptRating .box { width:30px; height:30px; background:#ddd; border-radius:6px; transition:0.2s; }
+#promptRating .box.filled { background:#28a745; }
+#favoritesList { margin-top:15px; background:#f0f8ff; padding:10px; border-radius:8px; max-height:150px; overflow-y:auto; }
+#favoritesList div { padding:6px; border-bottom:1px solid #ccc; cursor:pointer; }
+#favoritesList div:hover { background:#d0e4ff; }
+</style>
+</head>
+<body>
+
+<!-- ===== Login-Seite ===== -->
+<div class="container" id="loginPage">
+  <h1>🚛 LogiPrompt 3.0 - Login</h1>
+  <label for="userName">Name:</label>
+  <input type="text" id="userName" placeholder="Max Mustermann">
+
+  <label for="userRole">Rolle:</label>
+  <input type="text" id="userRole" placeholder="Kundenberater">
+
+  <label for="userCompany">Firma:</label>
+  <input type="text" id="userCompany" placeholder="Gebr. Müller GmbH">
+
+  <button id="loginBtn">Login</button>
+</div>
+
+<!-- ===== Prompt-Seite ===== -->
+<div class="container" id="promptPage" style="display:none;">
+  <h2>🎯 Prompt erstellen</h2>
+
+  <label for="keyword">Schlüsselwort / Thema:</label>
+  <input type="text" id="keyword" placeholder="z.B. Ermahnung, Lieferverzögerung">
+
+  <label for="roleTarget">Adressat / Rolle:</label>
+  <input type="text" id="roleTarget" placeholder="z.B. Kundenberater">
+
+  <label for="recipient">Empfänger / Name:</label>
+  <input type="text" id="recipient" placeholder="z.B. Herr Müller">
+
+  <label for="tone">Tonfall:</label>
+  <select id="tone">
+    <option value="">-- wählen --</option>
+    <option value="freundlich">Freundlich</option>
+    <option value="sachlich">Sachlich</option>
+    <option value="formell">Formell</option>
+    <option value="locker">Locker</option>
+    <option value="ernst">Ernst</option>
+  </select>
+
+  <label for="format">Textformat:</label>
+  <select id="format">
+    <option value="">-- wählen --</option>
+    <option value="E-Mail">E-Mail</option>
+    <option value="Brief">Brief</option>
+    <option value="Nachricht">Nachricht</option>
+    <option value="Tabelle">Tabelle</option>
+  </select>
+
+  <label for="language">Sprache:</label>
+  <select id="language">
+    <option value="">-- wählen --</option>
+    <option value="Deutsch">Deutsch</option>
+    <option value="Englisch">Englisch</option>
+    <option value="Französisch">Französisch</option>
+  </select>
+
+  <label for="details">Zusätzliche Details:</label>
+  <textarea id="details" placeholder="Weitere Infos ..."></textarea>
+
+  <button id="generateBtn">🚀 Prompt generieren</button>
+
+  <div id="promptResult"></div>
+
+  <div id="promptRating">
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+  </div>
+
+  <h3>⭐ Favoriten</h3>
+  <div id="favoritesList"></div>
+  <button id="saveFavoriteBtn">Favorit speichern</button>
+</div>
+
+<script>
+  // ===== Login =====
+  const loginBtn = document.getElementById("loginBtn");
+  const loginPage = document.getElementById("loginPage");
+  const promptPage = document.getElementById("promptPage");
+
+  loginBtn.addEventListener("click", () => {
+    const name = document.getElementById("userName").value.trim();
+    const role = document.getElementById("userRole").value.trim();
+    const company = document.getElementById("userCompany").value.trim();
+
+    if(!name || !role || !company){
+      alert("Bitte alle Felder ausfüllen!");
+      return;
+    }
+
+    localStorage.setItem("userName", name);
+    localStorage.setItem("userRole", role);
+    localStorage.setItem("userCompany", company);
+
+    loginPage.style.display = "none";
+    promptPage.style.display = "block";
+  });
+
+  // ===== Automatische Anpassung je Schlüsselwort =====
+  const keywordInput = document.getElementById("keyword");
+  const toneSelect = document.getElementById("tone");
+  const formatSelect = document.getElementById("format");
+
+  const keywordMap = {
+    "Ermahnung": {tone:"ernst", format:"E-Mail"},
+    "Lob": {tone:"freundlich", format:"E-Mail"},
+    "Anfrage": {tone:"sachlich", format:"Nachricht"},
+    "Lieferverzögerung": {tone:"sachlich", format:"E-Mail"},
+    "Intern": {tone:"neutral", format:"Tabelle"}
+  };
+
+  keywordInput.addEventListener("input", () => {
+    const val = keywordInput.value.trim();
+    if(keywordMap[val]){
+      toneSelect.value = keywordMap[val].tone;
+      formatSelect.value = keywordMap[val].format;
+    }
+  });
+
+  // ===== Prompt generieren & Bewertung =====
+  const generateBtn = document.getElementById("generateBtn");
+  const promptResult = document.getElementById("promptResult");
+  const boxes = document.querySelectorAll("#promptRating .box");
+
+  generateBtn.addEventListener("click", () => {
+    const keyword = document.getElementById("keyword").value.trim();
+    const roleTarget = document.getElementById("roleTarget").value.trim();
+    const recipient = document.getElementById("recipient").value.trim();
+    const tone = document.getElementById("tone").value;
+    const format = document.getElementById("format").value;
+    const language = document.getElementById("language").value;
+    const details = document.getElementById("details").value.trim();
+
+    const userName = localStorage.getItem("userName");
+    const userRole = localStorage.getItem("userRole");
+    const userCompany = localStorage.getItem("userCompany");
+
+    const promptText = `Schlüsselwort: ${keyword || "–"}
+Adressat / Rolle: ${roleTarget || "–"}
+Empfänger / Name: ${recipient || "–"}
+Tonfall: ${tone || "–"}
+Textformat: ${format || "–"}
+Sprache: ${language || "–"}
+Zusätzliche Details: ${details || "–"}
+
+Login-Daten:
+Name: ${userName}
+Rolle: ${userRole}
+Firma: ${userCompany}`;
+
+    promptResult.textContent = promptText;
+
+    // Bewertung
+    boxes.forEach(b => b.classList.remove("filled"));
+    let score = 0;
+    if(keyword) score++;
+    if(roleTarget) score++;
+    if(recipient) score++;
+    if(tone || format) score++;
+    if(language || details) score++;
+    for(let i=0;i<score;i++){ boxes[i].classList.add("filled"); }
+  });
+
+  // ===== Favoriten-Funktion =====
+  const favoritesList = document.getElementById("favoritesList");
+  const saveFavoriteBtn = document.getElementById("saveFavoriteBtn");
+
+  function loadFavorites(){
+    favoritesList.innerHTML = "";
+    const favs = JSON.parse(localStorage.getItem("favorites")||"[]");
+    favs.forEach((f)=>{
+      const div = document.createElement("div");
+      div.textContent = f.keyword + " → " + f.recipient;
+      div.addEventListener("click", () => {
+        document.getElementById("keyword").value = f.keyword;
+        document.getElementById("roleTarget").value = f.roleTarget;
+        document.getElementById("recipient").value = f.recipient;
+        document.getElementById("tone").value = f.tone;
+        document.getElementById("format").value = f.format;
+        document.getElementById("language").value = f.language;
+        document.getElementById("details").value = f.details;
+        promptResult.textContent = f.prompt;
+      });
+      favoritesList.appendChild(div);
+    });
+  }
+
+  saveFavoriteBtn.addEventListener("click", () => {
+    const keyword = document.getElementById("keyword").value.trim();
+    const roleTarget = document.getElementById("roleTarget").value.trim();
+    const recipient = document.getElementById("recipient").value.trim();
+    const tone = document.getElementById("tone").value;
+    const format = document.getElementById("format").value;
+    const language = document.getElementById("language").value;
+    const details = document.getElementById("details").value.trim();
+    const prompt = promptResult.textContent;
+
+    const favs = JSON.parse(localStorage.getItem("favorites")||"[]");
+    favs.push({keyword, roleTarget, recipient, tone, format, language, details, prompt});
+    localStorage.setItem("favorites", JSON.stringify(favs));
+    loadFavorites();
+  });
+
+  loadFavorites();
+
+</script>
+</body>
+</html>
