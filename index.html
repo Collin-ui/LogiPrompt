@@ -12,7 +12,6 @@ body{margin:0;font-family:Roboto,Arial,sans-serif;background:var(--bg);color:#11
 header{background:var(--blue);color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.08);}
 header .title{font-weight:700;}
 header .menu-toggle{font-size:20px;cursor:pointer;user-select:none;}
-
 #app{display:flex;min-height:calc(100vh - 56px);}
 nav{width:260px;background:#eaf6ff;padding:18px;box-shadow:2px 0 6px rgba(0,0,0,0.05);transition:width .25s;display:flex;flex-direction:column;justify-content:space-between;}
 nav.closed{width:64px;}
@@ -23,18 +22,11 @@ nav.closed li{padding:10px 6px;}
 nav li:hover{background:#bfe3ff;}
 nav .logout{background:var(--danger);color:#fff;padding:10px;border-radius:8px;border:none;cursor:pointer;width:100%;}
 nav .logout:hover{background:#c6372d;}
-
 main{flex:1;padding:28px;}
 .card{max-width:420px;margin:5% auto;background:var(--card);padding:26px;border-radius:12px;box-shadow:0 8px 20px rgba(10,30,60,0.06);}
 .card h2{text-align:center;margin:0 0 12px;font-size:22px;}
 input,select,button{width:100%;padding:10px 12px;margin:8px 0;border-radius:8px;border:1px solid #d1d5db;font-size:15px;}
 label.inline{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted);}
-button.primary{background:var(--blue);color:#fff;border:none;cursor:pointer;border-radius:8px;}
-button.ghost{background:transparent;border:1px solid #cbd5e1;color:#0b1220;cursor:pointer;}
-.small{font-size:13px;color:var(--muted);}
-.row{display:flex;gap:10px;}
-.row > *{flex:1;}
-.form-field{margin-bottom:10px;}
 .tooltip{display:inline-block;position:relative;color:var(--blue);font-weight:700;margin-right:8px;cursor:help;}
 .tooltip .tt{visibility:hidden;width:220px;background:var(--blue);color:#fff;padding:8px;border-radius:6px;position:absolute;bottom:130%;left:50%;transform:translateX(-50%);opacity:0;transition:opacity .2s;}
 .tooltip:hover .tt{visibility:visible;opacity:1;}
@@ -47,6 +39,11 @@ button.ghost{background:transparent;border:1px solid #cbd5e1;color:#0b1220;curso
 .fav-item{border:1px solid #e6eef8;padding:10px;border-radius:8px;margin-bottom:8px;background:#fff;}
 .fav-meta{font-size:12px;color:var(--muted);margin-bottom:6px;}
 .hidden{display:none;}
+.row{display:flex;gap:10px;}
+.row> *{flex:1;}
+.form-field{margin-bottom:10px;}
+button.primary{background:var(--blue);color:#fff;border:none;cursor:pointer;border-radius:8px;}
+button.ghost{background:transparent;border:1px solid #cbd5e1;color:#0b1220;cursor:pointer;}
 @media (max-width:900px){nav{display:none}.card{margin:7% 12px}header{padding:12px}}
 </style>
 </head>
@@ -70,6 +67,7 @@ button.ghost{background:transparent;border:1px solid #cbd5e1;color:#0b1220;curso
   </div>
 </nav>
 <main id="mainContent">
+
 <!-- LOGIN -->
 <div id="loginPage" class="card">
   <h2>Anmeldung / Registrierung</h2>
@@ -115,6 +113,10 @@ button.ghost{background:transparent;border:1px solid #cbd5e1;color:#0b1220;curso
   <div class="form-field">
     <label class="tooltip">i<span class="tt">Gib das Thema des Prompts ein (z.B. Ermahnung)</span></label>
     <input id="keyword" type="text" placeholder="Thema / Schlüsselwort" />
+  </div>
+  <div class="form-field">
+    <label class="tooltip">i<span class="tt">Zusätzliche Informationen (z.B. Hintergrund, Kontext)</span></label>
+    <input id="additionalInfo" type="text" placeholder="Zusätzliche Informationen"/>
   </div>
   <div class="row">
     <div>
@@ -194,18 +196,15 @@ button.ghost{background:transparent;border:1px solid #cbd5e1;color:#0b1220;curso
   <div id="favList"></div>
 </div>
 
-</main>
-</div>
-
 <script>
-const loginPage = document.getElementById('loginPage');
-const profilePage = document.getElementById('profilePage');
-const promptPage = document.getElementById('promptPage');
-const favoritesPage = document.getElementById('favoritesPage');
-const sideMenu = document.getElementById('sideMenu');
-const menuToggle = document.getElementById('menuToggle');
-
-let userData = {};
+const loginPage=document.getElementById('loginPage');
+const profilePage=document.getElementById('profilePage');
+const promptPage=document.getElementById('promptPage');
+const favoritesPage=document.getElementById('favoritesPage');
+const sideMenu=document.getElementById('sideMenu');
+const menuToggle=document.getElementById('menuToggle');
+let userData={};
+const ratingBoxes=[...document.querySelectorAll('#rating .box')];
 
 function showPage(page){
   loginPage.classList.add('hidden');
@@ -214,11 +213,7 @@ function showPage(page){
   favoritesPage.classList.add('hidden');
   page.classList.remove('hidden');
 }
-
-function updateMenuDisplay(){
-  sideMenu.style.display = Object.keys(userData).length ? 'flex' : 'none';
-}
-
+function updateMenuDisplay(){sideMenu.style.display=Object.keys(userData).length?'flex':'none';}
 menuToggle.addEventListener('click',()=>{sideMenu.classList.toggle('closed');});
 
 // LOGIN
@@ -226,13 +221,12 @@ document.getElementById('btnContinue').addEventListener('click',()=>{
   showPage(promptPage);
   updateMenuDisplay();
 });
-
 document.getElementById('btnSaveContinue').addEventListener('click',()=>{
-  const name = document.getElementById('name').value.trim();
-  const role = document.getElementById('role').value.trim();
-  const company = document.getElementById('company').value.trim();
-  const email = document.getElementById('email').value.trim();
-  const password = document.getElementById('password').value.trim();
+  const name=document.getElementById('name').value.trim();
+  const role=document.getElementById('role').value.trim();
+  const company=document.getElementById('company').value.trim();
+  const email=document.getElementById('email').value.trim();
+  const password=document.getElementById('password').value.trim();
   if(!name||!role||!company||!email||!password){alert('Bitte alle Felder ausfüllen!');return;}
   userData={name,role,company,email,password};
   localStorage.setItem('logiUser',JSON.stringify(userData));
@@ -257,10 +251,10 @@ document.getElementById('navFavs').addEventListener('click',()=>{showPage(favori
 
 // PROFILE
 function loadProfile(){
-  document.getElementById('profileName').value = userData.name||'';
-  document.getElementById('profileRole').value = userData.role||'';
-  document.getElementById('profileCompany').value = userData.company||'';
-  document.getElementById('profileEmail').value = userData.email||'';
+  document.getElementById('profileName').value=userData.name||'';
+  document.getElementById('profileRole').value=userData.role||'';
+  document.getElementById('profileCompany').value=userData.company||'';
+  document.getElementById('profileEmail').value=userData.email||'';
 }
 document.getElementById('btnSaveProfile').addEventListener('click',()=>{
   userData.name=document.getElementById('profileName').value;
@@ -280,22 +274,24 @@ const statusMsg=document.getElementById('statusMsg');
 const truckAnim=document.getElementById('truckAnimation');
 function generatePrompt(){
   const keyword=document.getElementById('keyword').value.trim();
+  const additional=document.getElementById('additionalInfo').value.trim();
   const recipientRole=document.getElementById('recipientRole').value;
   const recipientName=document.getElementById('recipientName').value.trim();
   const tone=document.getElementById('tone').value;
   const textFormat=document.getElementById('textFormat').value;
   const language=document.getElementById('language').value;
-  if(!keyword||!recipientRole||!recipientName||!tone||!textFormat||!language){alert('Bitte alle Felder ausfüllen!');return;}
+  if(!keyword&&!recipientRole&&!recipientName&&!tone&&!textFormat&&!language&&!additional){alert('Bitte mindestens ein Feld ausfüllen!');return;}
   truckAnim.style.transform='translateX(0)';
   setTimeout(()=>{
     truckAnim.style.transform='translateX(300px)';
-    const baseText="Erstelle eine professionelle Nachricht zum Thema [Thema] für [Empfänger] in der Rolle [Rolle] im Ton [Tonfall] im Format [Textformat] auf [Sprache]. Absender ist [Name], [Rolle in der Firma] bei [Firmenname].";
-    const finalPrompt = baseText.replace('[Thema]',keyword)
-      .replace('[Empfänger]',recipientName)
-      .replace('[Rolle]',recipientRole)
-      .replace('[Tonfall]',tone)
-      .replace('[Textformat]',textFormat)
-      .replace('[Sprache]',language)
+    let baseText="Erstelle eine professionelle Nachricht zum Thema [Thema], aufgrund [zusätzliche Informationen], für [Empfänger] in der Rolle [Rolle] im Ton [Tonfall] im Format [Textformat] auf [Sprache]. Absender ist [Name], [Rolle in der Firma] bei [Firmenname].";
+    const finalPrompt=baseText.replace('[Thema]',keyword||'')
+      .replace('[zusätzliche Informationen]',additional||'')
+      .replace('[Empfänger]',recipientName||'')
+      .replace('[Rolle]',recipientRole||'')
+      .replace('[Tonfall]',tone||'')
+      .replace('[Textformat]',textFormat||'')
+      .replace('[Sprache]',language||'')
       .replace('[Name]',userData.name||'')
       .replace('[Rolle in der Firma]',userData.role||'')
       .replace('[Firmenname]',userData.company||'');
@@ -306,11 +302,10 @@ function generatePrompt(){
     updateRating();
   },600);
 }
-
 document.getElementById('btnGenerate').addEventListener('click',generatePrompt);
-
 document.getElementById('btnReset').addEventListener('click',()=>{
   document.getElementById('keyword').value='';
+  document.getElementById('additionalInfo').value='';
   document.getElementById('recipientRole').value='';
   document.getElementById('recipientName').value='';
   document.getElementById('tone').value='';
@@ -321,13 +316,16 @@ document.getElementById('btnReset').addEventListener('click',()=>{
 });
 
 // RATING
-const ratingBoxes=[...document.querySelectorAll('#rating .box')];
 function updateRating(){
-  const filled=[document.getElementById('keyword').value,document.getElementById('recipientRole').value,
-  document.getElementById('recipientName').value,document.getElementById('tone').value,
-  document.getElementById('textFormat').value,document.getElementById('language').value];
-  const count=filled.filter(v=>v).length;
-  ratingBoxes.forEach((b,i)=>b.classList.toggle('active',i<count/6*5));
+  const fields=[document.getElementById('keyword').value,
+                document.getElementById('additionalInfo').value,
+                document.getElementById('recipientRole').value,
+                document.getElementById('recipientName').value,
+                document.getElementById('tone').value,
+                document.getElementById('textFormat').value,
+                document.getElementById('language').value];
+  const count=fields.filter(v=>v).length;
+  ratingBoxes.forEach((b,i)=>b.classList.toggle('active',i<Math.round(count/7*5)));
 }
 
 // FAVORITEN
