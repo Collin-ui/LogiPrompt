@@ -5,29 +5,52 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LogiPrompt v2.3</title>
 <style>
+    /* --- Basis Styles, angelehnt an alte Version --- */
     body {
         margin: 0;
         font-family: 'Arial', sans-serif;
-        background-color: #f0f8ff;
+        background-color: #f5faff;
         color: #333;
     }
     header {
         background-color: #0077cc;
         color: white;
-        padding: 1rem;
-        text-align: center;
+        padding: 1rem 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
         font-size: 1.5rem;
         font-weight: bold;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    #menuToggle {
+        font-size: 1.5rem;
+        cursor: pointer;
+        user-select: none;
     }
     #container {
         display: flex;
         min-height: 90vh;
+        transition: all 0.3s;
     }
     nav {
-        width: 220px;
+        width: 250px;
         background-color: #e6f2ff;
         padding: 1rem;
         box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        transition: all 0.3s;
+        overflow: auto;
+    }
+    nav.closed {
+        width: 60px;
+    }
+    nav img {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: block;
+        margin: 0 auto 1rem auto;
+        object-fit: cover;
     }
     nav ul {
         list-style: none;
@@ -40,6 +63,7 @@
         border-radius: 5px;
         cursor: pointer;
         transition: 0.3s;
+        text-align: center;
     }
     nav li:hover {
         background-color: #a6d1ff;
@@ -47,6 +71,7 @@
     main {
         flex: 1;
         padding: 2rem;
+        transition: all 0.3s;
     }
     .hidden {
         display: none;
@@ -57,6 +82,8 @@
         padding: 0.5rem;
         width: 100%;
         font-size: 1rem;
+        border-radius: 5px;
+        border: 1px solid #ccc;
     }
     button {
         background-color: #0077cc;
@@ -96,7 +123,7 @@
         opacity: 1;
     }
     #promptOutput {
-        background-color: #f5f5f5;
+        background-color: #f0f8ff;
         padding: 1rem;
         border-radius: 5px;
         margin-top: 1rem;
@@ -132,9 +159,13 @@
 </style>
 </head>
 <body>
-<header>LogiPrompt v2.3</header>
+<header>
+    LogiPrompt v2.3
+    <span id="menuToggle">☰</span>
+</header>
 <div id="container">
-    <nav>
+    <nav class="closed" id="sideMenu" style="display:none;">
+        <img id="profilePicMenu" src="https://via.placeholder.com/50" alt="Profilbild">
         <ul>
             <li onclick="showPage('profile')">Profil</li>
             <li onclick="showPage('prompt')">Prompt Erstellung</li>
@@ -148,9 +179,11 @@
             <input type="text" id="name" placeholder="Name">
             <input type="text" id="role" placeholder="Rolle in der Firma">
             <input type="text" id="company" placeholder="Firmenname">
+            <input type="email" id="email" placeholder="Email">
             <input type="password" id="password" placeholder="Passwort">
             <label><input type="checkbox" id="stayLoggedIn"> Angemeldet bleiben</label>
-            <button onclick="login()">Anmelden</button>
+            <button onclick="login(false)">Weiter</button>
+            <button onclick="login(true)">Speichern & Fortsetzen</button>
         </div>
 
         <!-- Profilseite -->
@@ -159,6 +192,7 @@
             <input type="text" id="profileName" placeholder="Name">
             <input type="text" id="profileRole" placeholder="Rolle in der Firma">
             <input type="text" id="profileCompany" placeholder="Firmenname">
+            <input type="email" id="profileEmail" placeholder="Email">
             <input type="file" id="profilePic">
             <button onclick="saveProfile()">Profil speichern</button>
             <div class="status" id="profileStatus"></div>
@@ -167,7 +201,6 @@
         <!-- Prompt-Erstellung -->
         <div id="promptPage" class="hidden">
             <h2>Prompt Erstellung</h2>
-
             <label class="tooltip">i
                 <span class="tooltiptext">Gib das Thema des Prompts ein (z.B. Ermahnung)</span>
             </label>
@@ -236,12 +269,24 @@
         <!-- Favoriten -->
         <div id="favoritesPage" class="hidden">
             <h2>Favoriten</h2>
+            <label>Sortieren:
+                <select id="sortFavorites" onchange="renderFavorites()">
+                    <option value="newest">Neueste → Älteste</option>
+                    <option value="oldest">Älteste → Neueste</option>
+                </select>
+            </label>
             <div id="favoritesList"></div>
         </div>
     </main>
 </div>
 
 <script>
+// --- Navigation Menu Toggle ---
+const menuToggle = document.getElementById('menuToggle');
+const sideMenu = document.getElementById('sideMenu');
+menuToggle.onclick = () => sideMenu.classList.toggle('closed');
+
+// --- User & Storage ---
 let currentUser = null;
 
 // Navigation
@@ -259,30 +304,33 @@ function showPage(page) {
 }
 
 // Login / Registrierung
-function login() {
+function login(save=false) {
     const name = document.getElementById('name').value;
     const role = document.getElementById('role').value;
     const company = document.getElementById('company').value;
+    const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
 
-    if(!name || !role || !company || !password) {
-        alert("Bitte alle Felder ausfüllen!");
-        return;
-    }
-
-    currentUser = {name, role, company, password};
-    localStorage.setItem('currentUser', JSON.stringify(currentUser));
-    if(document.getElementById('stayLoggedIn').checked) {
-        localStorage.setItem('stayLoggedIn', 'true');
+    if(save) {
+        if(!name || !role || !company || !email || !password) { alert("Bitte alle Felder ausfüllen!"); return; }
+        currentUser = {name, role, company, email, password};
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        if(document.getElementById('stayLoggedIn').checked) localStorage.setItem('stayLoggedIn','true');
+        else localStorage.removeItem('stayLoggedIn');
     } else {
-        localStorage.removeItem('stayLoggedIn');
+        // Wenn nur "Weiter" gedrückt, ohne speichern
+        let stored = localStorage.getItem('currentUser');
+        currentUser = stored ? JSON.parse(stored) : {name:'', role:'', company:'', email:''};
     }
 
-    // Profil Felder befüllen
-    document.getElementById('profileName').value = name;
-    document.getElementById('profileRole').value = role;
-    document.getElementById('profileCompany').value = company;
+    // Profilfelder befüllen
+    document.getElementById('profileName').value = currentUser.name;
+    document.getElementById('profileRole').value = currentUser.role;
+    document.getElementById('profileCompany').value = currentUser.company;
+    document.getElementById('profileEmail').value = currentUser.email;
+    if(currentUser.profilePic) document.getElementById('profilePicMenu').src = currentUser.profilePic;
 
+    sideMenu.style.display = 'block';
     showPage('prompt');
 }
 
@@ -291,6 +339,7 @@ function saveProfile() {
     currentUser.name = document.getElementById('profileName').value;
     currentUser.role = document.getElementById('profileRole').value;
     currentUser.company = document.getElementById('profileCompany').value;
+    currentUser.email = document.getElementById('profileEmail').value;
 
     const picFile = document.getElementById('profilePic').files[0];
     if(picFile) {
@@ -298,16 +347,17 @@ function saveProfile() {
         reader.onload = function(e) {
             currentUser.profilePic = e.target.result;
             localStorage.setItem('currentUser', JSON.stringify(currentUser));
-            document.getElementById('profileStatus').innerText = "Profil gespeichert!";
+            document.getElementById('profilePicMenu').src = currentUser.profilePic;
+            showPopup("Profil gespeichert!");
         };
         reader.readAsDataURL(picFile);
     } else {
         localStorage.setItem('currentUser', JSON.stringify(currentUser));
-        document.getElementById('profileStatus').innerText = "Profil gespeichert!";
+        showPopup("Profil gespeichert!");
     }
 }
 
-// Prompt generieren
+// --- Prompt-Erstellung ---
 function generatePrompt() {
     const keyword = document.getElementById('keyword').value;
     const recipientRole = document.getElementById('recipientRole').value;
@@ -321,70 +371,66 @@ function generatePrompt() {
     // LKW Animation
     const truck = document.getElementById('truckAnimation');
     truck.style.transform = "translateX(400px)";
-    setTimeout(() => truck.style.transform = "translateX(0px)", 2000);
+    setTimeout(()=>truck.style.transform="translateX(0px)",2000);
 
     const prompt = `Von: ${currentUser.name}, ${currentUser.role}, ${currentUser.company}\nAn: ${recipientName} (${recipientRole})\nTonfall: ${tone}\nFormat: ${textFormat}\nSprache: ${language}\nThema: ${keyword}\n\nBitte ChatGPT verwenden, um folgenden Text zu erstellen.`;
 
     document.getElementById('promptOutput').innerText = prompt;
-    document.getElementById('promptStatus').innerText = "Prompt generiert!";
+    showPopup("Prompt generiert!");
 
     // Bewertung berechnen
-    let filled = 0;
-    [keyword, recipientRole, recipientName, tone, textFormat, language].forEach(f => { if(f) filled++; });
+    const fields = [keyword, recipientRole, recipientName, tone, textFormat, language];
+    const filled = fields.filter(f => f).length;
     for(let i=1;i<=5;i++){
-        document.getElementById('box'+i).classList.remove('active');
-        if(i <= Math.min(filled,5)) document.getElementById('box'+i).classList.add('active');
+        document.getElementById('box'+i).classList.toggle('active', i <= Math.min(filled,5));
     }
 }
 
-// Felder zurücksetzen
 function resetFields() {
-    document.getElementById('keyword').value = '';
-    document.getElementById('recipientRole').selectedIndex = 0;
-    document.getElementById('recipientName').value = '';
-    document.getElementById('tone').selectedIndex = 0;
-    document.getElementById('textFormat').selectedIndex = 0;
-    document.getElementById('language').selectedIndex = 0;
-    document.getElementById('promptOutput').innerText = '';
-    document.getElementById('promptStatus').innerText = '';
+    ['keyword','recipientRole','recipientName','tone','textFormat','language'].forEach(id=>{
+        const el = document.getElementById(id);
+        if(el.tagName=='SELECT') el.selectedIndex=0;
+        else el.value='';
+    });
+    document.getElementById('promptOutput').innerText='';
+    document.getElementById('promptStatus').innerText='';
     for(let i=1;i<=5;i++) document.getElementById('box'+i).classList.remove('active');
 }
 
 // Prompt kopieren
 function copyPrompt() {
     const text = document.getElementById('promptOutput').innerText;
-    navigator.clipboard.writeText(text).then(()=> {
-        document.getElementById('promptStatus').innerText = "Prompt kopiert!";
-    });
+    if(!text) return;
+    navigator.clipboard.writeText(text).then(()=> showPopup("Prompt kopiert!"));
 }
 
-// Favoriten speichern
+// Favoriten
 function saveFavorite() {
     const promptText = document.getElementById('promptOutput').innerText;
     if(!promptText) return;
     let favorites = JSON.parse(localStorage.getItem('favorites') || "[]");
     favorites.push({prompt: promptText, date: new Date().toISOString()});
     localStorage.setItem('favorites', JSON.stringify(favorites));
-    document.getElementById('promptStatus').innerText = "Favorit hinzugefügt!";
+    showPopup("Favorit hinzugefügt!");
 }
 
-// Favoriten anzeigen
 function renderFavorites() {
-    const favorites = JSON.parse(localStorage.getItem('favorites') || "[]");
+    const sort = document.getElementById('sortFavorites')?.value || 'newest';
+    let favorites = JSON.parse(localStorage.getItem('favorites') || "[]");
+    if(sort==='newest') favorites = favorites.slice().reverse();
     const container = document.getElementById('favoritesList');
     container.innerHTML = '';
-    favorites.slice().reverse().forEach((f,i)=>{
+    favorites.forEach((f,i)=>{
         const div = document.createElement('div');
         div.style.border = '1px solid #ccc';
         div.style.padding = '0.5rem';
         div.style.marginBottom = '0.5rem';
         div.innerHTML = `<pre>${f.prompt}</pre>
-        <button onclick="removeFavorite(${favorites.length - 1 - i})">Entfernen</button>`;
+        <button onclick="removeFavorite(${i})">Entfernen</button>`;
         container.appendChild(div);
     });
 }
 
-// Favorit entfernen
 function removeFavorite(index) {
     let favorites = JSON.parse(localStorage.getItem('favorites') || "[]");
     favorites.splice(index,1);
@@ -392,13 +438,33 @@ function removeFavorite(index) {
     renderFavorites();
 }
 
-// Automatisch eingeloggt bleiben
+// --- Popups ---
+function showPopup(message) {
+    const popup = document.createElement('div');
+    popup.style.position='fixed';
+    popup.style.bottom='20px';
+    popup.style.right='20px';
+    popup.style.backgroundColor='#0077cc';
+    popup.style.color='white';
+    popup.style.padding='1rem';
+    popup.style.borderRadius='5px';
+    popup.style.boxShadow='0 2px 5px rgba(0,0,0,0.3)';
+    popup.style.zIndex=1000;
+    popup.innerText=message;
+    document.body.appendChild(popup);
+    setTimeout(()=>popup.remove(),2000);
+}
+
+// --- Auto login ---
 window.onload = function() {
     if(localStorage.getItem('stayLoggedIn') && localStorage.getItem('currentUser')) {
         currentUser = JSON.parse(localStorage.getItem('currentUser'));
         document.getElementById('profileName').value = currentUser.name;
         document.getElementById('profileRole').value = currentUser.role;
         document.getElementById('profileCompany').value = currentUser.company;
+        document.getElementById('profileEmail').value = currentUser.email;
+        if(currentUser.profilePic) document.getElementById('profilePicMenu').src = currentUser.profilePic;
+        sideMenu.style.display='block';
         showPage('prompt');
     }
 };
