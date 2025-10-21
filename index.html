@@ -4,158 +4,33 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LogiPrompt v2.3</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap">
 <style>
-    /* --- Basis Styles, angelehnt an alte Version --- */
-    body {
-        margin: 0;
-        font-family: 'Arial', sans-serif;
-        background-color: #f5faff;
-        color: #333;
-    }
-    header {
-        background-color: #0077cc;
-        color: white;
-        padding: 1rem 2rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        font-size: 1.5rem;
-        font-weight: bold;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    #menuToggle {
-        font-size: 1.5rem;
-        cursor: pointer;
-        user-select: none;
-    }
-    #container {
-        display: flex;
-        min-height: 90vh;
-        transition: all 0.3s;
-    }
-    nav {
-        width: 250px;
-        background-color: #e6f2ff;
-        padding: 1rem;
-        box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-        transition: all 0.3s;
-        overflow: auto;
-    }
-    nav.closed {
-        width: 60px;
-    }
-    nav img {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        display: block;
-        margin: 0 auto 1rem auto;
-        object-fit: cover;
-    }
-    nav ul {
-        list-style: none;
-        padding: 0;
-    }
-    nav li {
-        padding: 0.8rem;
-        margin-bottom: 0.5rem;
-        background-color: #d0e7ff;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: 0.3s;
-        text-align: center;
-    }
-    nav li:hover {
-        background-color: #a6d1ff;
-    }
-    main {
-        flex: 1;
-        padding: 2rem;
-        transition: all 0.3s;
-    }
-    .hidden {
-        display: none;
-    }
-    input, select, textarea, button {
-        display: block;
-        margin-bottom: 1rem;
-        padding: 0.5rem;
-        width: 100%;
-        font-size: 1rem;
-        border-radius: 5px;
-        border: 1px solid #ccc;
-    }
-    button {
-        background-color: #0077cc;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-    }
-    button:hover {
-        background-color: #005fa3;
-    }
-    .tooltip {
-        display: inline-block;
-        position: relative;
-        cursor: pointer;
-        color: #0077cc;
-        font-weight: bold;
-    }
-    .tooltip .tooltiptext {
-        visibility: hidden;
-        width: 200px;
-        background-color: #0077cc;
-        color: #fff;
-        text-align: center;
-        border-radius: 5px;
-        padding: 0.5rem;
-        position: absolute;
-        z-index: 1;
-        bottom: 125%;
-        left: 50%;
-        margin-left: -100px;
-        opacity: 0;
-        transition: opacity 0.3s;
-    }
-    .tooltip:hover .tooltiptext {
-        visibility: visible;
-        opacity: 1;
-    }
-    #promptOutput {
-        background-color: #f0f8ff;
-        padding: 1rem;
-        border-radius: 5px;
-        margin-top: 1rem;
-        min-height: 80px;
-        white-space: pre-wrap;
-    }
-    #rating {
-        display: flex;
-        margin-top: 1rem;
-        gap: 5px;
-    }
-    .box {
-        width: 30px;
-        height: 30px;
-        border: 1px solid #ccc;
-        border-radius: 3px;
-        background-color: #eee;
-    }
-    .active {
-        background-color: #00cc44;
-    }
-    .status {
-        margin-top: 1rem;
-        color: #0077cc;
-        font-weight: bold;
-    }
-    #truckAnimation {
-        width: 50px;
-        height: 50px;
-        margin: 1rem 0;
-        transition: transform 2s ease-in-out;
-    }
+/* --- ALTES DESIGN 1:1 übernommen --- */
+body { margin:0; font-family:'Roboto',sans-serif; background:#f5faff; color:#333;}
+header { background:#0077cc; color:#fff; padding:1rem 2rem; font-size:1.5rem; font-weight:bold; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);}
+#menuToggle{font-size:1.5rem;cursor:pointer;user-select:none;}
+#container{display:flex; min-height:90vh; transition:all 0.3s;}
+nav{width:250px;background:#e6f2ff; padding:1rem; box-shadow:2px 0 5px rgba(0,0,0,0.1); transition:all 0.3s; overflow:auto;}
+nav.closed{width:60px;}
+nav img{width:50px;height:50px;border-radius:50%;display:block;margin:0 auto 1rem auto;object-fit:cover;}
+nav ul{list-style:none;padding:0;}
+nav li{padding:0.8rem; margin-bottom:0.5rem; background:#d0e7ff; border-radius:5px; cursor:pointer; transition:0.3s; text-align:center;}
+nav li:hover{background:#a6d1ff;}
+main{flex:1;padding:2rem; transition:all 0.3s;}
+.hidden{display:none;}
+input, select, textarea, button{display:block;margin-bottom:1rem;padding:0.5rem;width:100%;font-size:1rem;border-radius:5px;border:1px solid #ccc;}
+button{background:#0077cc;color:#fff;border:none;border-radius:5px;cursor:pointer;}
+button:hover{background:#005fa3;}
+.tooltip{display:inline-block;position:relative;cursor:pointer;color:#0077cc;font-weight:bold;}
+.tooltip .tooltiptext{visibility:hidden;width:200px;background:#0077cc;color:#fff;text-align:center;border-radius:5px;padding:0.5rem;position:absolute;z-index:1;bottom:125%;left:50%;margin-left:-100px;opacity:0;transition:opacity 0.3s;}
+.tooltip:hover .tooltiptext{visibility:visible;opacity:1;}
+#promptOutput{background:#f0f8ff;padding:1rem;border-radius:5px;margin-top:1rem;min-height:80px;white-space:pre-wrap;}
+#rating{display:flex;margin-top:1rem;gap:5px;}
+.box{width:30px;height:30px;border:1px solid #ccc;border-radius:3px;background:#eee;}
+.active{background:#00cc44;}
+.status{margin-top:1rem;color:#0077cc;font-weight:bold;}
+#truckAnimation{width:50px;height:50px;margin:1rem 0;transition:transform 2s ease-in-out;}
 </style>
 </head>
 <body>
@@ -173,7 +48,7 @@
         </ul>
     </nav>
     <main>
-        <!-- Anmelde-/Registrierungsseite -->
+        <!-- Anmeldung / Registrierung -->
         <div id="loginPage">
             <h2>Anmeldung / Registrierung</h2>
             <input type="text" id="name" placeholder="Name">
@@ -201,46 +76,34 @@
         <!-- Prompt-Erstellung -->
         <div id="promptPage" class="hidden">
             <h2>Prompt Erstellung</h2>
-            <label class="tooltip">i
-                <span class="tooltiptext">Gib das Thema des Prompts ein (z.B. Ermahnung)</span>
-            </label>
+            <label class="tooltip">i<span class="tooltiptext">Gib das Thema des Prompts ein (z.B. Ermahnung)</span></label>
             <input type="text" id="keyword" placeholder="Thema / Schlüsselwort" required>
 
-            <label class="tooltip">i
-                <span class="tooltiptext">Rolle des Adressaten auswählen</span>
-            </label>
+            <label class="tooltip">i<span class="tooltiptext">Rolle des Adressaten auswählen</span></label>
             <select id="recipientRole">
                 <option value="Fahrerpersonal">Fahrerpersonal</option>
                 <option value="Logistikleitung">Logistikleitung</option>
                 <option value="Disponent">Disponent</option>
             </select>
 
-            <label class="tooltip">i
-                <span class="tooltiptext">Name des Empfängers</span>
-            </label>
+            <label class="tooltip">i<span class="tooltiptext">Name des Empfängers</span></label>
             <input type="text" id="recipientName" placeholder="Empfänger Name">
 
-            <label class="tooltip">i
-                <span class="tooltiptext">Tonfall auswählen</span>
-            </label>
+            <label class="tooltip">i<span class="tooltiptext">Tonfall auswählen</span></label>
             <select id="tone">
                 <option value="ernst">Ernst</option>
                 <option value="lösungsorientiert">Lösungsorientiert</option>
                 <option value="freundlich">Freundlich</option>
             </select>
 
-            <label class="tooltip">i
-                <span class="tooltiptext">Textformat auswählen</span>
-            </label>
+            <label class="tooltip">i<span class="tooltiptext">Textformat auswählen</span></label>
             <select id="textFormat">
                 <option value="Email">Email</option>
                 <option value="Brief">Brief</option>
                 <option value="Memo">Memo</option>
             </select>
 
-            <label class="tooltip">i
-                <span class="tooltiptext">Sprache auswählen</span>
-            </label>
+            <label class="tooltip">i<span class="tooltiptext">Sprache auswählen</span></label>
             <select id="language">
                 <option value="Deutsch">Deutsch</option>
                 <option value="Englisch">Englisch</option>
@@ -250,7 +113,7 @@
             <button onclick="generatePrompt()">Prompt generieren</button>
             <button onclick="resetFields()">Zurücksetzen</button>
 
-            <img id="truckAnimation" src="https://cdn-icons-png.flaticon.com/512/616/616408.png" style="transform: translateX(0);">
+            <img id="truckAnimation" src="https://cdn-icons-png.flaticon.com/512/616/616408.png">
 
             <div id="promptOutput"></div>
             <button onclick="copyPrompt()">Prompt kopieren</button>
@@ -291,16 +154,8 @@ let currentUser = null;
 
 // Navigation
 function showPage(page) {
-    document.getElementById('loginPage').classList.add('hidden');
-    document.getElementById('profilePage').classList.add('hidden');
-    document.getElementById('promptPage').classList.add('hidden');
-    document.getElementById('favoritesPage').classList.add('hidden');
-    if(page === 'profile') document.getElementById('profilePage').classList.remove('hidden');
-    if(page === 'prompt') document.getElementById('promptPage').classList.remove('hidden');
-    if(page === 'favorites') {
-        document.getElementById('favoritesPage').classList.remove('hidden');
-        renderFavorites();
-    }
+    ['loginPage','profilePage','promptPage','favoritesPage'].forEach(p => document.getElementById(p).classList.add('hidden'));
+    document.getElementById(page+'Page')?.classList.remove('hidden');
 }
 
 // Login / Registrierung
@@ -312,140 +167,142 @@ function login(save=false) {
     const password = document.getElementById('password').value;
 
     if(save) {
-        if(!name || !role || !company || !email || !password) { alert("Bitte alle Felder ausfüllen!"); return; }
-        currentUser = {name, role, company, email, password};
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        if(!name||!role||!company||!email||!password){alert("Bitte alle Felder ausfüllen!"); return;}
+        currentUser={name,role,company,email,password};
+        localStorage.setItem('currentUser',JSON.stringify(currentUser));
         if(document.getElementById('stayLoggedIn').checked) localStorage.setItem('stayLoggedIn','true');
         else localStorage.removeItem('stayLoggedIn');
     } else {
-        // Wenn nur "Weiter" gedrückt, ohne speichern
-        let stored = localStorage.getItem('currentUser');
-        currentUser = stored ? JSON.parse(stored) : {name:'', role:'', company:'', email:''};
+        let stored=localStorage.getItem('currentUser');
+        currentUser=stored?JSON.parse(stored):{name:'',role:'',company:'',email:''};
     }
 
-    // Profilfelder befüllen
-    document.getElementById('profileName').value = currentUser.name;
-    document.getElementById('profileRole').value = currentUser.role;
-    document.getElementById('profileCompany').value = currentUser.company;
-    document.getElementById('profileEmail').value = currentUser.email;
-    if(currentUser.profilePic) document.getElementById('profilePicMenu').src = currentUser.profilePic;
+    document.getElementById('profileName').value=currentUser.name;
+    document.getElementById('profileRole').value=currentUser.role;
+    document.getElementById('profileCompany').value=currentUser.company;
+    document.getElementById('profileEmail').value=currentUser.email;
+    if(currentUser.profilePic) document.getElementById('profilePicMenu').src=currentUser.profilePic;
 
-    sideMenu.style.display = 'block';
+    sideMenu.style.display='block';
     showPage('prompt');
 }
 
 // Profil speichern
 function saveProfile() {
-    currentUser.name = document.getElementById('profileName').value;
-    currentUser.role = document.getElementById('profileRole').value;
-    currentUser.company = document.getElementById('profileCompany').value;
-    currentUser.email = document.getElementById('profileEmail').value;
+    currentUser.name=document.getElementById('profileName').value;
+    currentUser.role=document.getElementById('profileRole').value;
+    currentUser.company=document.getElementById('profileCompany').value;
+    currentUser.email=document.getElementById('profileEmail').value;
 
-    const picFile = document.getElementById('profilePic').files[0];
-    if(picFile) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            currentUser.profilePic = e.target.result;
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
-            document.getElementById('profilePicMenu').src = currentUser.profilePic;
+    const picFile=document.getElementById('profilePic').files[0];
+    if(picFile){
+        const reader=new FileReader();
+        reader.onload=function(e){
+            currentUser.profilePic=e.target.result;
+            localStorage.setItem('currentUser',JSON.stringify(currentUser));
+            document.getElementById('profilePicMenu').src=currentUser.profilePic;
             showPopup("Profil gespeichert!");
         };
         reader.readAsDataURL(picFile);
     } else {
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        localStorage.setItem('currentUser',JSON.stringify(currentUser));
         showPopup("Profil gespeichert!");
     }
 }
 
 // --- Prompt-Erstellung ---
-function generatePrompt() {
-    const keyword = document.getElementById('keyword').value;
-    const recipientRole = document.getElementById('recipientRole').value;
-    const recipientName = document.getElementById('recipientName').value;
-    const tone = document.getElementById('tone').value;
-    const textFormat = document.getElementById('textFormat').value;
-    const language = document.getElementById('language').value;
+function generatePrompt(){
+    const keyword=document.getElementById('keyword').value;
+    const recipientRole=document.getElementById('recipientRole').value;
+    const recipientName=document.getElementById('recipientName').value;
+    const tone=document.getElementById('tone').value;
+    const textFormat=document.getElementById('textFormat').value;
+    const language=document.getElementById('language').value;
 
-    if(!keyword) { alert("Thema ist Pflichtfeld!"); return; }
+    if(!keyword){alert("Thema ist Pflichtfeld!");return;}
 
     // LKW Animation
-    const truck = document.getElementById('truckAnimation');
-    truck.style.transform = "translateX(400px)";
+    const truck=document.getElementById('truckAnimation');
+    truck.style.transform="translateX(400px)";
     setTimeout(()=>truck.style.transform="translateX(0px)",2000);
 
-    const prompt = `Von: ${currentUser.name}, ${currentUser.role}, ${currentUser.company}\nAn: ${recipientName} (${recipientRole})\nTonfall: ${tone}\nFormat: ${textFormat}\nSprache: ${language}\nThema: ${keyword}\n\nBitte ChatGPT verwenden, um folgenden Text zu erstellen.`;
+    // Grundtext exakt wie alte Version:
+    const prompt=`Von: ${currentUser.name}, ${currentUser.role}, ${currentUser.company}
+An: ${recipientName} (${recipientRole})
+Tonfall: ${tone}
+Format: ${textFormat}
+Sprache: ${language}
+Thema: ${keyword}
 
-    document.getElementById('promptOutput').innerText = prompt;
+Bitte verfasse einen professionellen Text basierend auf diesen Angaben.`;
+
+    document.getElementById('promptOutput').innerText=prompt;
     showPopup("Prompt generiert!");
 
-    // Bewertung berechnen
-    const fields = [keyword, recipientRole, recipientName, tone, textFormat, language];
-    const filled = fields.filter(f => f).length;
-    for(let i=1;i<=5;i++){
-        document.getElementById('box'+i).classList.toggle('active', i <= Math.min(filled,5));
-    }
+    // Bewertung
+    const fields=[keyword,recipientRole,recipientName,tone,textFormat,language];
+    const filled=fields.filter(f=>f).length;
+    for(let i=1;i<=5;i++) document.getElementById('box'+i).classList.toggle('active',i<=Math.min(filled,5));
 }
 
-function resetFields() {
+function resetFields(){
     ['keyword','recipientRole','recipientName','tone','textFormat','language'].forEach(id=>{
-        const el = document.getElementById(id);
-        if(el.tagName=='SELECT') el.selectedIndex=0;
-        else el.value='';
+        const el=document.getElementById(id);
+        if(el.tagName=='SELECT') el.selectedIndex=0; else el.value='';
     });
     document.getElementById('promptOutput').innerText='';
     document.getElementById('promptStatus').innerText='';
     for(let i=1;i<=5;i++) document.getElementById('box'+i).classList.remove('active');
 }
 
-// Prompt kopieren
-function copyPrompt() {
-    const text = document.getElementById('promptOutput').innerText;
-    if(!text) return;
-    navigator.clipboard.writeText(text).then(()=> showPopup("Prompt kopiert!"));
+function copyPrompt(){
+    const text=document.getElementById('promptOutput').innerText;
+    if(!text)return;
+    navigator.clipboard.writeText(text).then(()=>showPopup("Prompt kopiert!"));
 }
 
 // Favoriten
-function saveFavorite() {
-    const promptText = document.getElementById('promptOutput').innerText;
-    if(!promptText) return;
-    let favorites = JSON.parse(localStorage.getItem('favorites') || "[]");
-    favorites.push({prompt: promptText, date: new Date().toISOString()});
-    localStorage.setItem('favorites', JSON.stringify(favorites));
+function saveFavorite(){
+    const promptText=document.getElementById('promptOutput').innerText;
+    if(!promptText)return;
+    let favorites=JSON.parse(localStorage.getItem('favorites')||"[]");
+    favorites.push({prompt:promptText,date:new Date().toISOString()});
+    localStorage.setItem('favorites',JSON.stringify(favorites));
     showPopup("Favorit hinzugefügt!");
 }
 
-function renderFavorites() {
-    const sort = document.getElementById('sortFavorites')?.value || 'newest';
-    let favorites = JSON.parse(localStorage.getItem('favorites') || "[]");
-    if(sort==='newest') favorites = favorites.slice().reverse();
-    const container = document.getElementById('favoritesList');
-    container.innerHTML = '';
+function renderFavorites(){
+    const sort=document.getElementById('sortFavorites')?.value||'newest';
+    let favorites=JSON.parse(localStorage.getItem('favorites')||"[]");
+    if(sort==='newest') favorites=favorites.slice().reverse();
+    const container=document.getElementById('favoritesList');
+    container.innerHTML='';
     favorites.forEach((f,i)=>{
-        const div = document.createElement('div');
-        div.style.border = '1px solid #ccc';
-        div.style.padding = '0.5rem';
-        div.style.marginBottom = '0.5rem';
-        div.innerHTML = `<pre>${f.prompt}</pre>
+        const div=document.createElement('div');
+        div.style.border='1px solid #ccc';
+        div.style.padding='0.5rem';
+        div.style.marginBottom='0.5rem';
+        div.innerHTML=`<pre>${f.prompt}</pre>
         <button onclick="removeFavorite(${i})">Entfernen</button>`;
         container.appendChild(div);
     });
 }
 
-function removeFavorite(index) {
-    let favorites = JSON.parse(localStorage.getItem('favorites') || "[]");
+function removeFavorite(index){
+    let favorites=JSON.parse(localStorage.getItem('favorites')||"[]");
     favorites.splice(index,1);
-    localStorage.setItem('favorites', JSON.stringify(favorites));
+    localStorage.setItem('favorites',JSON.stringify(favorites));
     renderFavorites();
 }
 
-// --- Popups ---
-function showPopup(message) {
-    const popup = document.createElement('div');
+// Popups
+function showPopup(message){
+    const popup=document.createElement('div');
     popup.style.position='fixed';
     popup.style.bottom='20px';
     popup.style.right='20px';
-    popup.style.backgroundColor='#0077cc';
-    popup.style.color='white';
+    popup.style.background='#0077cc';
+    popup.style.color='#fff';
     popup.style.padding='1rem';
     popup.style.borderRadius='5px';
     popup.style.boxShadow='0 2px 5px rgba(0,0,0,0.3)';
@@ -455,15 +312,15 @@ function showPopup(message) {
     setTimeout(()=>popup.remove(),2000);
 }
 
-// --- Auto login ---
-window.onload = function() {
-    if(localStorage.getItem('stayLoggedIn') && localStorage.getItem('currentUser')) {
-        currentUser = JSON.parse(localStorage.getItem('currentUser'));
-        document.getElementById('profileName').value = currentUser.name;
-        document.getElementById('profileRole').value = currentUser.role;
-        document.getElementById('profileCompany').value = currentUser.company;
-        document.getElementById('profileEmail').value = currentUser.email;
-        if(currentUser.profilePic) document.getElementById('profilePicMenu').src = currentUser.profilePic;
+// Auto login
+window.onload=function(){
+    if(localStorage.getItem('stayLoggedIn') && localStorage.getItem('currentUser')){
+        currentUser=JSON.parse(localStorage.getItem('currentUser'));
+        document.getElementById('profileName').value=currentUser.name;
+        document.getElementById('profileRole').value=currentUser.role;
+        document.getElementById('profileCompany').value=currentUser.company;
+        document.getElementById('profileEmail').value=currentUser.email;
+        if(currentUser.profilePic) document.getElementById('profilePicMenu').src=currentUser.profilePic;
         sideMenu.style.display='block';
         showPage('prompt');
     }
