@@ -6,7 +6,7 @@
 <title>LogiPrompt v2.3</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap">
 <style>
-/* --- ALTES DESIGN 1:1 übernommen --- */
+/* --- ALTES DESIGN DER LOGINSEITE 1:1 übernommen --- */
 body { margin:0; font-family:'Roboto',sans-serif; background:#f5faff; color:#333;}
 header { background:#0077cc; color:#fff; padding:1rem 2rem; font-size:1.5rem; font-weight:bold; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);}
 #menuToggle{font-size:1.5rem;cursor:pointer;user-select:none;}
@@ -31,6 +31,9 @@ button:hover{background:#005fa3;}
 .active{background:#00cc44;}
 .status{margin-top:1rem;color:#0077cc;font-weight:bold;}
 #truckAnimation{width:50px;height:50px;margin:1rem 0;transition:transform 2s ease-in-out;}
+/* --- Alte Login-Seite zentriert --- */
+#loginPage{max-width:400px;margin:5% auto;padding:2rem;background:#fff;border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,0.1);}
+#loginPage h2{text-align:center;margin-bottom:1.5rem;}
 </style>
 </head>
 <body>
@@ -269,6 +272,7 @@ function saveFavorite(){
     favorites.push({prompt:promptText,date:new Date().toISOString()});
     localStorage.setItem('favorites',JSON.stringify(favorites));
     showPopup("Favorit hinzugefügt!");
+    renderFavorites();
 }
 
 function renderFavorites(){
